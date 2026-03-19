@@ -88,17 +88,64 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
 .co-btn{display:block;width:100%;padding:16px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;text-align:center;background:var(--cyan);color:var(--navy);transition:all .25s;letter-spacing:.2px;margin-top:20px}
 .co-btn:hover{background:#fff;transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,200,215,.25)}
 
-/* OO Form label override */
-.orderonline-embed-form label,
-.orderonline-embed-form .field-label,
-.orderonline-embed-form [class*="label"],
-.oo-form-field label,
-[class*="oo-"] label,
-[class*="oo-"] p {
-  color: #EEF6FF !important;
-  font-weight: 500 !important;
-}
 
+
+
+
+/* Labels & section titles on dark background */
+.co-form-body > div > label,
+.co-form-body > div > div > label,
+.co-form-body label,
+.co-form-body h1,
+.co-form-body h2,
+.co-form-body h3,
+.co-form-body h4 {
+  color: #EEF6FF !important;
+  font-weight: 600 !important;
+}
+/* Section headers like "Data Penerima:", "Metode Pembayaran:", "Gunakan Kode Kupon:" */
+.co-form-body b,
+.co-form-body strong {
+  color: #EEF6FF !important;
+}
+/* Input fields — dark text on white background */
+.co-form-body input[type="text"],
+.co-form-body input[type="email"],
+.co-form-body input[type="tel"],
+.co-form-body input[type="number"],
+.co-form-body input[type="password"],
+.co-form-body input:not([type="radio"]):not([type="checkbox"]),
+.co-form-body select,
+.co-form-body textarea {
+  color: #1a1a2e !important;
+  background: #ffffff !important;
+}
+.co-form-body input::placeholder,
+.co-form-body textarea::placeholder {
+  color: #9CA3AF !important;
+}
+/* Payment method list — items inside white box keep dark text */
+.co-form-body [style*="background: rgb(249"],
+.co-form-body [style*="background: #f"],
+.co-form-body [style*="background:#f"],
+.co-form-body [style*="background: white"],
+.co-form-body [style*="background:white"] {
+  color: #1a1a2e !important;
+}
+.co-form-body [style*="background: rgb(249"] *,
+.co-form-body [style*="background: #f"] *,
+.co-form-body [style*="background:#f"] * {
+  color: #1a1a2e !important;
+}
+/* Rincian pesanan box */
+.co-form-body [style*="border: 1px solid rgb(0, 200"],
+.co-form-body [style*="border:1px solid"] {
+  color: #1a1a2e !important;
+}
+.co-form-body [style*="border: 1px solid rgb(0, 200"] *,
+.co-form-body [style*="border:1px solid"] * {
+  color: #1a1a2e !important;
+}
 </style>
 </head>
 <body>
@@ -180,7 +227,7 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
         <div class="ooef">
           <form class="orderonline-embed-form" data-username="winbiz"
             data-product-slug="evans-trading-class-premium-indikator-silver-3-bulan" data-product-id="69b112be76636cdad709af9a"
-            id="oo-embed-form-evans-trading-class-premium-indikator-silver-3-bulan-4695" data-origin="orderonline">
+            id="oo-embed-form-evans-trading-class-premium-indikator-silver-3-bulan-2746" data-origin="orderonline">
             <div class="ooef-loader"><div aria-live="polite" role="status"><div>Loading...</div></div></div>
           </form>
         </div>
@@ -207,38 +254,82 @@ document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
 </script>
 <script>
 if(typeof xLogError!='function'){var xLogError=function(error){var req=new XMLHttpRequest();var payload=JSON.stringify({url:document.location.href,line:error.line,stack:error.stack});var params='message='+encodeURIComponent(error.name)+'&payload='+encodeURIComponent(payload)+'&type=embed&level=error';req.open('POST','https://api.orderonline.id/log',true);req.setRequestHeader('Content-type','application/x-www-form-urlencoded');req.send(params);};}try{if(typeof xEmbedScript!='function'){var xEmbedScript=function(){!function(w,d,e,v,id,t,s){if(d.getElementById(id))return;t=d.createElement(e);t.async=!0;t.src=v;t.id=id;s=d.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);}(window,document,'script','https://cdn.orderonline.id/js/embed-v2-slim.min.js?v=8.0.2','oo-embed-js');};}if(typeof xEmbedInit!='function'){var xEmbedInit=function(w,n){if(w.ooe)return;n=w.ooe=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!w._ooe)w._ooe=n;n.push=n;n.loaded=!0;n.version='8.0.2';n.queue=[];};} xEmbedInit(window);ooe('setup','redirect','https://winbiz.orderonline.id');
-ooe('init','63bedb5f983fd6d05d01448a','69b112be76636cdad709af9a','69b112be76636cdad709af9b','oo-embed-form-evans-trading-class-premium-indikator-silver-3-bulan-4695',{"mode":"page","action":"Klik untuk pemesanan","title":"Form Pemesanan","triggerPixel":true,"triggerGtm":true});
+ooe('init','63bedb5f983fd6d05d01448a','69b112be76636cdad709af9a','69b112be76636cdad709af9b','oo-embed-form-evans-trading-class-premium-indikator-silver-3-bulan-2746',{"mode":"page","action":"Klik untuk pemesanan","title":"Form Pemesanan","triggerPixel":true,"triggerGtm":true});
 if(!window.jQuery){!function(w,d,e,v,id,t,s){if(d.getElementById(id))return;t=d.createElement(e);t.async=!0;t.src=v;t.id=id;t.addEventListener('load',xEmbedScript);s=d.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);}(window,document,'script','https://cdn.orderonline.id/js/vendor/jquery.min.js','oo-embed-jquery');}else{xEmbedScript();}
 }catch(e){xLogError(e);throw e;}
 </script>
 
 <script>
-// Force OO form labels to be white after form renders
-(function() {
-  function fixLabels() {
-    var selectors = [
-      '.orderonline-embed-form label',
-      '.orderonline-embed-form p',
-      '[class*="oo-field"] label',
-      '[class*="oo-label"]',
-      '.oo-form label',
-      '.oo-form p'
-    ];
-    selectors.forEach(function(sel) {
-      document.querySelectorAll(sel).forEach(function(el) {
-        el.style.color = '#EEF6FF';
-        el.style.fontWeight = '500';
+
+</script>
+
+
+
+
+
+<script>
+(function(){
+  function fixForm() {
+    var body = document.querySelector('.co-form-body');
+    if (!body) return;
+
+    // 1. Payment method items (inside white box) → hitam
+    var paymentNames = ['Credit Card','Mandiri Bill','BCA Virtual Account','BNI Virtual Account',
+      'Permata Virtual Account','GoPay','OVO','DANA','ShopeePay','Alfamart'];
+    body.querySelectorAll('span, div, p, label').forEach(function(el) {
+      var t = (el.innerText || '').trim();
+      paymentNames.forEach(function(name) {
+        if (t === name) {
+          el.style.setProperty('color', '#1a1a2e', 'important');
+          el.style.setProperty('font-weight', '500', 'important');
+        }
       });
     });
+
+    // 2. "GUNAKAN KODE KUPON:" → putih
+    body.querySelectorAll('*').forEach(function(el) {
+      var t = (el.innerText || el.textContent || '').trim();
+      if (t.includes('GUNAKAN KODE KUPON') || t.includes('Gunakan Kode Kupon')) {
+        if (el.children.length === 0 || el.tagName === 'LABEL' || el.tagName === 'B' || el.tagName === 'STRONG' || el.tagName === 'P') {
+          el.style.setProperty('color', '#EEF6FF', 'important');
+          el.style.setProperty('font-weight', '600', 'important');
+        }
+      }
+    });
+
+    // 3. Section headers on dark bg → putih
+    ['Data Penerima', 'Metode Pembayaran'].forEach(function(hdr) {
+      body.querySelectorAll('*').forEach(function(el) {
+        var t = (el.innerText || '').trim();
+        if (t.includes(hdr) && el.children.length <= 1) {
+          el.style.setProperty('color', '#EEF6FF', 'important');
+          el.style.setProperty('font-weight', '700', 'important');
+        }
+      });
+    });
+
+    // 4. Input labels (Nama, No WhatsApp, Email, Username) → putih
+    body.querySelectorAll('label').forEach(function(el) {
+      el.style.setProperty('color', '#EEF6FF', 'important');
+      el.style.setProperty('font-weight', '600', 'important');
+    });
+
+    // 5. Rincian pesanan box items → hitam
+    body.querySelectorAll('*').forEach(function(el) {
+      var t = (el.innerText || '').trim();
+      if ((t.includes('RINCIAN') || t.includes('Total') || t.includes('Rp') || t.includes('Evans Trading')) 
+          && el.children.length <= 2) {
+        var bg = window.getComputedStyle(el.parentElement || el).backgroundColor;
+        if (bg && (bg.includes('249') || bg.includes('255, 255, 255') || bg.includes('248'))) {
+          el.style.setProperty('color', '#1a1a2e', 'important');
+        }
+      }
+    });
   }
-  // Run on load
-  window.addEventListener('load', fixLabels);
-  // Run periodically for 10s after load (OO form loads async)
-  var count = 0;
-  var interval = setInterval(function() {
-    fixLabels();
-    if (++count > 20) clearInterval(interval);
-  }, 500);
+
+  // Poll 15 detik
+  var n = 0, iv = setInterval(function(){ fixForm(); if(++n>30) clearInterval(iv); }, 500);
+  window.addEventListener('load', fixForm);
 })();
 </script>
 </body>
