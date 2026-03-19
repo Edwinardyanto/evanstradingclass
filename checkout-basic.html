@@ -88,17 +88,32 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
 .co-btn{display:block;width:100%;padding:16px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;text-align:center;background:var(--cyan2);color:var(--navy);transition:all .25s;letter-spacing:.2px;margin-top:20px}
 .co-btn:hover{background:#fff;transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,200,215,.25)}
 
-/* OO Form label override */
-.orderonline-embed-form label,
-.orderonline-embed-form .field-label,
-.orderonline-embed-form [class*="label"],
-.oo-form-field label,
-[class*="oo-"] label,
-[class*="oo-"] p {
-  color: #EEF6FF !important;
-  font-weight: 500 !important;
-}
 
+/* ── OO Form text override ── */
+.co-form-body * {
+  color: #EEF6FF !important;
+}
+.co-form-body input,
+.co-form-body select,
+.co-form-body textarea {
+  color: #111827 !important;
+  background: #ffffff !important;
+}
+.co-form-body input::placeholder,
+.co-form-body textarea::placeholder {
+  color: #9CA3AF !important;
+}
+/* Payment method labels inside white boxes */
+.co-form-body [style*="background: rgb(255"],
+.co-form-body [style*="background:#fff"],
+.co-form-body [style*="background: white"] {
+  color: #111827 !important;
+}
+.co-form-body [style*="background: rgb(255"] *,
+.co-form-body [style*="background:#fff"] *,
+.co-form-body [style*="background: white"] * {
+  color: #111827 !important;
+}
 </style>
 </head>
 <body>
@@ -220,33 +235,7 @@ try{
 </script>
 
 <script>
-// Force OO form labels to be white after form renders
-(function() {
-  function fixLabels() {
-    var selectors = [
-      '.orderonline-embed-form label',
-      '.orderonline-embed-form p',
-      '[class*="oo-field"] label',
-      '[class*="oo-label"]',
-      '.oo-form label',
-      '.oo-form p'
-    ];
-    selectors.forEach(function(sel) {
-      document.querySelectorAll(sel).forEach(function(el) {
-        el.style.color = '#EEF6FF';
-        el.style.fontWeight = '500';
-      });
-    });
-  }
-  // Run on load
-  window.addEventListener('load', fixLabels);
-  // Run periodically for 10s after load (OO form loads async)
-  var count = 0;
-  var interval = setInterval(function() {
-    fixLabels();
-    if (++count > 20) clearInterval(interval);
-  }, 500);
-})();
+
 </script>
 </body>
 </html>
