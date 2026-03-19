@@ -89,30 +89,62 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
 .co-btn:hover{background:#fff;transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,200,215,.25)}
 
 
-/* ── OO Form text override ── */
-.co-form-body * {
+
+
+/* ── OO Form label fix — only dark bg elements ── */
+/* Labels & section titles on dark background */
+.co-form-body > div > label,
+.co-form-body > div > div > label,
+.co-form-body label,
+.co-form-body h1,
+.co-form-body h2,
+.co-form-body h3,
+.co-form-body h4 {
+  color: #EEF6FF !important;
+  font-weight: 600 !important;
+}
+/* Section headers like "Data Penerima:", "Metode Pembayaran:", "Gunakan Kode Kupon:" */
+.co-form-body b,
+.co-form-body strong {
   color: #EEF6FF !important;
 }
-.co-form-body input,
+/* Input fields — dark text on white background */
+.co-form-body input[type="text"],
+.co-form-body input[type="email"],
+.co-form-body input[type="tel"],
+.co-form-body input[type="number"],
+.co-form-body input[type="password"],
+.co-form-body input:not([type="radio"]):not([type="checkbox"]),
 .co-form-body select,
 .co-form-body textarea {
-  color: #111827 !important;
+  color: #1a1a2e !important;
   background: #ffffff !important;
 }
 .co-form-body input::placeholder,
 .co-form-body textarea::placeholder {
   color: #9CA3AF !important;
 }
-/* Payment method labels inside white boxes */
-.co-form-body [style*="background: rgb(255"],
-.co-form-body [style*="background:#fff"],
-.co-form-body [style*="background: white"] {
-  color: #111827 !important;
+/* Payment method list — items inside white box keep dark text */
+.co-form-body [style*="background: rgb(249"],
+.co-form-body [style*="background: #f"],
+.co-form-body [style*="background:#f"],
+.co-form-body [style*="background: white"],
+.co-form-body [style*="background:white"] {
+  color: #1a1a2e !important;
 }
-.co-form-body [style*="background: rgb(255"] *,
-.co-form-body [style*="background:#fff"] *,
-.co-form-body [style*="background: white"] * {
-  color: #111827 !important;
+.co-form-body [style*="background: rgb(249"] *,
+.co-form-body [style*="background: #f"] *,
+.co-form-body [style*="background:#f"] * {
+  color: #1a1a2e !important;
+}
+/* Rincian pesanan box */
+.co-form-body [style*="border: 1px solid rgb(0, 200"],
+.co-form-body [style*="border:1px solid"] {
+  color: #1a1a2e !important;
+}
+.co-form-body [style*="border: 1px solid rgb(0, 200"] *,
+.co-form-body [style*="border:1px solid"] * {
+  color: #1a1a2e !important;
 }
 </style>
 </head>
@@ -236,6 +268,36 @@ try{
 
 <script>
 
+</script>
+
+<script>
+(function(){
+  function fixOOLabels() {
+    // Force section headers white
+    var darkBgSelectors = 'label, h3, h4, b, strong';
+    document.querySelectorAll('.co-form-body ' + darkBgSelectors).forEach(function(el) {
+      // Check if element is inside a light background container
+      var parent = el.parentElement;
+      var isInWhiteBox = false;
+      while (parent && parent.classList && !parent.classList.contains('co-form-body')) {
+        var bg = window.getComputedStyle(parent).backgroundColor;
+        if (bg && (bg.includes('255, 255, 255') || bg.includes('249') || bg.includes('rgb(255'))) {
+          isInWhiteBox = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      el.style.color = isInWhiteBox ? '#1a1a2e' : '#EEF6FF';
+      el.style.fontWeight = isInWhiteBox ? '' : '600';
+    });
+  }
+  var count = 0;
+  var iv = setInterval(function(){
+    fixOOLabels();
+    if(++count > 30) clearInterval(iv);
+  }, 500);
+  window.addEventListener('load', fixOOLabels);
+})();
 </script>
 </body>
 </html>
