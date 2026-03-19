@@ -272,75 +272,71 @@ try{
 
 
 
+
+
 <script>
 (function(){
-  // Text labels yang ada di background gelap → putih
-  var DARK_LABELS = [
-    'Data Penerima','Metode Pembayaran','Gunakan Kode Kupon',
-    'Nama','No WhatsApp','Email','Username'
-  ];
-  // Text yang ada di background putih → tetap gelap
-  var LIGHT_TEXTS = [
-    'Credit Card','Mandiri','BCA','BNI','Permata',
-    'GoPay','OVO','DANA','ShopeePay','Alfamart',
-    'RINCIAN PESANAN','Total','Rp','Evans'
-  ];
+  function fixForm() {
+    var body = document.querySelector('.co-form-body');
+    if (!body) return;
 
-  function colorEl(el) {
-    if (!el || el.nodeType !== 1) return;
-    var txt = (el.innerText || el.textContent || '').trim();
-    if (!txt || txt.length > 60) return;
-    
-    // Cek apakah parent punya background putih/terang
-    var isLight = false;
-    var p = el;
-    for (var i = 0; i < 6; i++) {
-      if (!p) break;
-      var bg = window.getComputedStyle(p).backgroundColor;
-      if (bg && (
-        bg === 'rgb(255, 255, 255)' ||
-        bg === 'rgba(255, 255, 255, 1)' ||
-        bg.startsWith('rgb(24') ||  // rgb(249...
-        bg.startsWith('rgb(25') ||
-        bg.startsWith('rgb(24')
-      )) { isLight = true; break; }
-      p = p.parentElement;
-    }
-    
-    var isDarkLabel = DARK_LABELS.some(function(k){ return txt.includes(k); });
-    var isLightText = LIGHT_TEXTS.some(function(k){ return txt.includes(k); });
-    
-    if (isDarkLabel && !isLight) {
+    // 1. Payment method items (inside white box) → hitam
+    var paymentNames = ['Credit Card','Mandiri Bill','BCA Virtual Account','BNI Virtual Account',
+      'Permata Virtual Account','GoPay','OVO','DANA','ShopeePay','Alfamart'];
+    body.querySelectorAll('span, div, p, label').forEach(function(el) {
+      var t = (el.innerText || '').trim();
+      paymentNames.forEach(function(name) {
+        if (t === name) {
+          el.style.setProperty('color', '#1a1a2e', 'important');
+          el.style.setProperty('font-weight', '500', 'important');
+        }
+      });
+    });
+
+    // 2. "GUNAKAN KODE KUPON:" → putih
+    body.querySelectorAll('*').forEach(function(el) {
+      var t = (el.innerText || el.textContent || '').trim();
+      if (t.includes('GUNAKAN KODE KUPON') || t.includes('Gunakan Kode Kupon')) {
+        if (el.children.length === 0 || el.tagName === 'LABEL' || el.tagName === 'B' || el.tagName === 'STRONG' || el.tagName === 'P') {
+          el.style.setProperty('color', '#EEF6FF', 'important');
+          el.style.setProperty('font-weight', '600', 'important');
+        }
+      }
+    });
+
+    // 3. Section headers on dark bg → putih
+    ['Data Penerima', 'Metode Pembayaran'].forEach(function(hdr) {
+      body.querySelectorAll('*').forEach(function(el) {
+        var t = (el.innerText || '').trim();
+        if (t.includes(hdr) && el.children.length <= 1) {
+          el.style.setProperty('color', '#EEF6FF', 'important');
+          el.style.setProperty('font-weight', '700', 'important');
+        }
+      });
+    });
+
+    // 4. Input labels (Nama, No WhatsApp, Email, Username) → putih
+    body.querySelectorAll('label').forEach(function(el) {
       el.style.setProperty('color', '#EEF6FF', 'important');
       el.style.setProperty('font-weight', '600', 'important');
-    }
-  }
+    });
 
-  function runFix() {
-    // Target semua text node langsung di form
-    var form = document.querySelector('.co-form-body');
-    if (!form) return;
-    // All p, label, span, div, b, strong, h3, h4
-    form.querySelectorAll('p,label,span,b,strong,h3,h4,div').forEach(colorEl);
-    
-    // Payment method items di background putih — paksa dark
-    form.querySelectorAll('[style*="background"]').forEach(function(el){
-      var bg = el.style.backgroundColor || el.style.background || '';
-      if (bg.includes('255, 255, 255') || bg.includes('#fff') || bg.includes('white') || bg.includes('rgb(249') || bg.includes('rgb(250')) {
-        el.querySelectorAll('*').forEach(function(child){
-          child.style.setProperty('color', '#1a1a2e', 'important');
-        });
+    // 5. Rincian pesanan box items → hitam
+    body.querySelectorAll('*').forEach(function(el) {
+      var t = (el.innerText || '').trim();
+      if ((t.includes('RINCIAN') || t.includes('Total') || t.includes('Rp') || t.includes('Evans Trading')) 
+          && el.children.length <= 2) {
+        var bg = window.getComputedStyle(el.parentElement || el).backgroundColor;
+        if (bg && (bg.includes('249') || bg.includes('255, 255, 255') || bg.includes('248'))) {
+          el.style.setProperty('color', '#1a1a2e', 'important');
+        }
       }
     });
   }
 
-  // Poll selama 15 detik untuk catch async OO render
-  var n = 0;
-  var iv = setInterval(function(){
-    runFix();
-    if (++n > 30) clearInterval(iv);
-  }, 500);
-  window.addEventListener('load', runFix);
+  // Poll 15 detik
+  var n = 0, iv = setInterval(function(){ fixForm(); if(++n>30) clearInterval(iv); }, 500);
+  window.addEventListener('load', fixForm);
 })();
 </script>
 </body>
