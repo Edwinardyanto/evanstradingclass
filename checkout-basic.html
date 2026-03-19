@@ -91,7 +91,7 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
 
 
 
-/* ── OO Form label fix — only dark bg elements ── */
+
 /* Labels & section titles on dark background */
 .co-form-body > div > label,
 .co-form-body > div > div > label,
@@ -228,7 +228,7 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
           <form class="orderonline-embed-form" data-username="winbiz"
             data-product-slug="evans-trading-class-premium-indikator-basic-1-bulan"
             data-product-id="69b111615f8e4492820f83ba"
-            id="oo-embed-form-evans-trading-class-premium-indikator-basic-1-bulan-4144"
+            id="oo-embed-form-evans-trading-class-premium-indikator-basic-1-bulan-4505"
             data-origin="orderonline">
             <div class="ooef-loader"><style>.ooef-loader{visibility:hidden;opacity:0;position:absolute;left:0;right:0;top:0;bottom:0;display:flex;justify-content:center;align-items:center;flex-direction:column;animation:ooLoadingIn 10s ease;-webkit-animation:ooLoadingIn 10s ease;animation-fill-mode:forwards;overflow:hidden}@keyframes ooLoadingIn{0%{visibility:hidden;opacity:0}20%{visibility:visible;opacity:0}100%{visibility:visible;opacity:1}}@-webkit-keyframes ooLoadingIn{0%{visibility:hidden;opacity:0}20%{visibility:visible;opacity:0}100%{visibility:visible;opacity:1}}.ooef-loader>div,.ooef-loader>div:after{border-radius:50%;width:2.5rem;height:2.5rem}.ooef-loader>div{font-size:10px;position:relative;text-indent:-9999em;border:.25rem solid #f5f5f5;border-left:.25rem solid #55c4cf;-webkit-transform:translateZ(0);-ms-transform:translateZ(0);transform:translateZ(0);-webkit-animation:ooLoading 1.1s infinite linear;animation:ooLoading 1.1s infinite linear}.ooef-loader.error>div{border-left:.25rem solid #ff4500;animation-duration:5s}@-webkit-keyframes ooLoading{0%{-webkit-transform:rotate(0);transform:rotate(0)}100%{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}@keyframes ooLoading{0%{-webkit-transform:rotate(0);transform:rotate(0)}100%{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}</style><div aria-live="polite" role="status"><div>Loading...</div></div></div>
           </form>
@@ -261,7 +261,7 @@ try{
   if(typeof xEmbedInit!='function'){var xEmbedInit=function(w,n){if(w.ooe)return;n=w.ooe=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!w._ooe)w._ooe=n;n.push=n;n.loaded=!0;n.version='8.0.2';n.queue=[];};}
   xEmbedInit(window);
   ooe('setup','redirect','https://winbiz.orderonline.id');
-  ooe('init','63bedb5f983fd6d05d01448a','69b111615f8e4492820f83ba','69b111615f8e4492820f83bb','oo-embed-form-evans-trading-class-premium-indikator-basic-1-bulan-4144',{"mode":"page","action":"Klik untuk pemesanan","title":"Form Pemesanan","triggerPixel":true,"triggerGtm":true});
+  ooe('init','63bedb5f983fd6d05d01448a','69b111615f8e4492820f83ba','69b111615f8e4492820f83bb','oo-embed-form-evans-trading-class-premium-indikator-basic-1-bulan-4505',{"mode":"page","action":"Klik untuk pemesanan","title":"Form Pemesanan","triggerPixel":true,"triggerGtm":true});
   if(!window.jQuery){!function(w,d,e,v,id,t,s){if(d.getElementById(id))return;t=d.createElement(e);t.async=!0;t.src=v;t.id=id;t.addEventListener('load',xEmbedScript);s=d.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);}(window,document,'script','https://cdn.orderonline.id/js/vendor/jquery.min.js','oo-embed-jquery');}else{xEmbedScript();}
 }catch(e){xLogError(e);throw e;}
 </script>
@@ -270,33 +270,77 @@ try{
 
 </script>
 
+
+
 <script>
 (function(){
-  function fixOOLabels() {
-    // Force section headers white
-    var darkBgSelectors = 'label, h3, h4, b, strong';
-    document.querySelectorAll('.co-form-body ' + darkBgSelectors).forEach(function(el) {
-      // Check if element is inside a light background container
-      var parent = el.parentElement;
-      var isInWhiteBox = false;
-      while (parent && parent.classList && !parent.classList.contains('co-form-body')) {
-        var bg = window.getComputedStyle(parent).backgroundColor;
-        if (bg && (bg.includes('255, 255, 255') || bg.includes('249') || bg.includes('rgb(255'))) {
-          isInWhiteBox = true;
-          break;
-        }
-        parent = parent.parentElement;
+  // Text labels yang ada di background gelap → putih
+  var DARK_LABELS = [
+    'Data Penerima','Metode Pembayaran','Gunakan Kode Kupon',
+    'Nama','No WhatsApp','Email','Username'
+  ];
+  // Text yang ada di background putih → tetap gelap
+  var LIGHT_TEXTS = [
+    'Credit Card','Mandiri','BCA','BNI','Permata',
+    'GoPay','OVO','DANA','ShopeePay','Alfamart',
+    'RINCIAN PESANAN','Total','Rp','Evans'
+  ];
+
+  function colorEl(el) {
+    if (!el || el.nodeType !== 1) return;
+    var txt = (el.innerText || el.textContent || '').trim();
+    if (!txt || txt.length > 60) return;
+    
+    // Cek apakah parent punya background putih/terang
+    var isLight = false;
+    var p = el;
+    for (var i = 0; i < 6; i++) {
+      if (!p) break;
+      var bg = window.getComputedStyle(p).backgroundColor;
+      if (bg && (
+        bg === 'rgb(255, 255, 255)' ||
+        bg === 'rgba(255, 255, 255, 1)' ||
+        bg.startsWith('rgb(24') ||  // rgb(249...
+        bg.startsWith('rgb(25') ||
+        bg.startsWith('rgb(24')
+      )) { isLight = true; break; }
+      p = p.parentElement;
+    }
+    
+    var isDarkLabel = DARK_LABELS.some(function(k){ return txt.includes(k); });
+    var isLightText = LIGHT_TEXTS.some(function(k){ return txt.includes(k); });
+    
+    if (isDarkLabel && !isLight) {
+      el.style.setProperty('color', '#EEF6FF', 'important');
+      el.style.setProperty('font-weight', '600', 'important');
+    }
+  }
+
+  function runFix() {
+    // Target semua text node langsung di form
+    var form = document.querySelector('.co-form-body');
+    if (!form) return;
+    // All p, label, span, div, b, strong, h3, h4
+    form.querySelectorAll('p,label,span,b,strong,h3,h4,div').forEach(colorEl);
+    
+    // Payment method items di background putih — paksa dark
+    form.querySelectorAll('[style*="background"]').forEach(function(el){
+      var bg = el.style.backgroundColor || el.style.background || '';
+      if (bg.includes('255, 255, 255') || bg.includes('#fff') || bg.includes('white') || bg.includes('rgb(249') || bg.includes('rgb(250')) {
+        el.querySelectorAll('*').forEach(function(child){
+          child.style.setProperty('color', '#1a1a2e', 'important');
+        });
       }
-      el.style.color = isInWhiteBox ? '#1a1a2e' : '#EEF6FF';
-      el.style.fontWeight = isInWhiteBox ? '' : '600';
     });
   }
-  var count = 0;
+
+  // Poll selama 15 detik untuk catch async OO render
+  var n = 0;
   var iv = setInterval(function(){
-    fixOOLabels();
-    if(++count > 30) clearInterval(iv);
+    runFix();
+    if (++n > 30) clearInterval(iv);
   }, 500);
-  window.addEventListener('load', fixOOLabels);
+  window.addEventListener('load', runFix);
 })();
 </script>
 </body>
