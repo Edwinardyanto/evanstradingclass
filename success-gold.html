@@ -88,6 +88,11 @@ footer{border-top:1px solid var(--border);padding:24px 48px;display:flex;align-i
 /* tier accent overrides */
 .ns-num{border-color:#F5C842;color:#F5C842}
 .ns:hover{border-color:#F5C84233}
+
+@keyframes btnPulse{
+  0%,100%{box-shadow:0 12px 48px rgba(0,200,215,.4)}
+  50%{box-shadow:0 16px 64px rgba(0,200,215,.65)}
+}
 </style>
 </head>
 <body>
@@ -143,25 +148,33 @@ footer{border-top:1px solid var(--border);padding:24px 48px;display:flex;align-i
         </div>
       </div>
 
+
       <!-- Next steps -->
       <div style="margin-top:28px">
-    <div class="steps-grid">
-      <div class="ns">
-        <div class="ns-num">01</div>
-        <h4>Cek Email / WA</h4>
-        <p>Tim kami akan menghubungi kamu untuk konfirmasi dan meminta username TradingView.</p>
+        <!-- Urgent banner -->
+        <div style="background:rgba(245,200,66,.1);border-top:1px solid rgba(245,200,66,.25);border-bottom:1px solid rgba(245,200,66,.25);padding:18px 32px;text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--white);margin-bottom:6px">⚠️ 1 LANGKAH LAGI UNTUK MENDAPATKAN AKSES</div>
+          <div style="font-size:13.5px;color:var(--muted);line-height:1.7">Pastikan kamu mengisi form di bawah ini — <b style="color:var(--white)">pengisian form wajib dilakukan</b><br/>agar akses TradingView dapat segera diproses.</div>
+        </div>
+
+        <div class="steps-grid">
+          <div class="ns">
+            <div class="ns-num">01</div>
+            <h4>Isi Form Sekarang</h4>
+            <p>Klik tombol di bawah dan lengkapi form pendaftaran. Wajib diisi agar akses dapat diproses.</p>
+          </div>
+          <div class="ns">
+            <div class="ns-num">02</div>
+            <h4>Akses Diberikan</h4>
+            <p>Setelah form terisi, akses TradingView akan kami proses dan dikirim dalam 1×24 jam.</p>
+          </div>
+          <div class="ns">
+            <div class="ns-num">03</div>
+            <h4>Aktifkan di TradingView</h4>
+            <p>Buka TradingView → Indicators → Invite-only scripts → tambahkan ke chart dan mulai trading!</p>
+          </div>
+        </div>
       </div>
-      <div class="ns">
-        <div class="ns-num">02</div>
-        <h4>Invite TradingView</h4>
-        <p>Username TradingView kamu akan di-invite sebagai collaborator script private dalam 1×24 jam.</p>
-      </div>
-      <div class="ns">
-        <div class="ns-num">03</div>
-        <h4>Mulai Trading</h4>
-        <p>Tambahkan indikator ke chart, setting TP/SL sesuai kebutuhan, dan mulai analisis!</p>
-      </div>
-    </div></div>
 
       <!-- CTA buttons -->
       <div class="cta-row">
