@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/png" href="data/etc-logo-bg-trans.png"/>
+<title>Pembayaran Berhasil — ETC Test</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#080F1A;--navy2:#0C1628;--cyan:#00C8D7;--cyan2:#18B0C0;--white:#EEF6FF;--muted:#4A7080;--border:#162438;--card:#0D1B30;--card2:#111F35}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,200,215,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,215,.02) 1px,transparent 1px);background-size:56px 56px}
+.cur{position:fixed;width:8px;height:8px;background:var(--cyan);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%)}
+.cur-ring{position:fixed;width:32px;height:32px;border:1.5px solid rgba(0,200,215,.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .25s,height .25s,opacity .25s}
+nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:14px 48px;background:rgba(8,15,26,.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-img{height:36px;width:36px;object-fit:contain}
+.nav-logo-txt{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;color:var(--white)}
+.nav-logo-txt span{color:var(--cyan)}
+.wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:120px 32px 80px;text-align:center}
+.check-circle{width:80px;height:80px;border-radius:50%;background:rgba(0,200,215,.12);border:2px solid var(--cyan);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:36px}
+.title{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:2px;color:var(--white);margin-bottom:8px;line-height:1.1}
+.subtitle{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:36px}
+.card{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:24px 28px;margin-bottom:20px;text-align:left}
+.card-title{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px}
+.step-list{display:flex;flex-direction:column;gap:14px}
+.step-item{display:flex;align-items:flex-start;gap:14px}
+.step-num{width:28px;height:28px;border-radius:50%;background:rgba(0,200,215,.12);border:1px solid rgba(0,200,215,.3);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);flex-shrink:0;margin-top:1px}
+.step-text{font-size:13px;color:var(--white);line-height:1.6}
+.step-text span{color:var(--muted);font-size:12px;display:block;margin-top:2px}
+.warning-box{background:rgba(255,200,0,.05);border:1px solid rgba(255,200,0,.2);border-radius:10px;padding:14px 18px;margin-bottom:20px;text-align:left}
+.warning-box p{font-size:12.5px;color:#c8a800;line-height:1.7}
+.warning-box a{color:var(--cyan);text-decoration:none;font-weight:600}
+.btn-home{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:var(--cyan2);color:var(--navy);font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;border-radius:8px;text-decoration:none;transition:all .25s;letter-spacing:.2px}
+.btn-home:hover{background:#fff;transform:translateY(-2px)}
+footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;margin-top:40px}
+.foot-brand{display:flex;align-items:center;gap:8px}
+.foot-logo{height:28px;width:28px;object-fit:contain}
+.foot-txt{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--white)}
+.foot-txt span{color:var(--cyan)}
+.foot-copy{font-size:11px;color:var(--muted)}
+@media(max-width:600px){nav{padding:14px 20px}.wrap{padding:100px 20px 60px}footer{flex-direction:column;gap:10px;text-align:center;padding:24px 20px}}
+</style>
+</head>
+<body>
+<div class="cur" id="cur"></div>
+<div class="cur-ring" id="curR"></div>
+
+<nav>
+  <a href="index.html" class="nav-brand">
+    <img src="data/etc-logo-bg-trans.png" alt="ETC" class="nav-logo-img"/>
+    <div class="nav-logo-txt">EVANS TRADING <span>CLASS</span></div>
+  </a>
+</nav>
+
+<div class="wrap">
+  <div class="check-circle">✅</div>
+  <div class="title">Pembayaran Berhasil!</div>
+  <p class="subtitle">Terima kasih telah membeli <strong>ETC Premium Indikator — Test</strong>.<br/>Akses TradingView kamu sedang diproses otomatis.</p>
+
+  <div class="card">
+    <div class="card-title">Langkah selanjutnya</div>
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          Cek email kamu dalam beberapa menit
+          <span>Email konfirmasi + panduan akses akan dikirim ke alamat email yang kamu daftarkan</span>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          Buka TradingView dan login dengan akun yang kamu daftarkan
+          <span>Pastikan menggunakan akun yang username-nya kamu isi di form tadi</span>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          Buka Indicators → Personal → Invite-only → Evans Trading Class
+          <span>Indikator akan muncul di sana setelah akses aktif</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warning-box">
+    <p>⚠️ Indikator belum muncul atau tidak menerima email? Kemungkinan username TradingView yang diisi salah.<br/>
+    Hubungi CS kami: <a href="https://t.me/ETCIndicator" target="_blank">@ETCIndicator di Telegram</a></p>
+  </div>
+
+  <a href="index.html" class="btn-home">← Kembali ke Beranda</a>
+</div>
+
+<footer>
+  <div class="foot-brand">
+    <img src="data/etc-logo-bg-trans.png" alt="ETC" class="foot-logo"/>
+    <div class="foot-txt">EVANS TRADING <span>CLASS</span></div>
+  </div>
+  <div class="foot-copy">© 2026 Evans Trading Class · Not Financial Advice</div>
+</footer>
+
+<script>
+var cur=document.getElementById('cur'),curR=document.getElementById('curR'),mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
+(function loop(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;cur.style.left=mx+'px';cur.style.top=my+'px';curR.style.left=rx+'px';curR.style.top=ry+'px';requestAnimationFrame(loop);})();
+</script>
+</body>
+</html>
