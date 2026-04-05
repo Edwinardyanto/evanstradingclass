@@ -518,6 +518,7 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
 let SERVER = '';
 let SECRET = '';
 let allSubscribers = [];
+let currentEditOrderId = null;
 
 // ── Auth ──────────────────────────────────────────────────────────
 async function login() {
@@ -1101,13 +1102,14 @@ document.getElementById('product-modal').addEventListener('click', function(e) {
 document.getElementById('affiliate-modal').addEventListener('click', function(e) {
   if (e.target === this) closeAffiliateModal();
 });
-document.getElementById('edit-username-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeEditUsernameModal();
-});
+const editModal = document.getElementById('edit-username-modal');
+if (editModal) {
+  editModal.addEventListener('click', function(e) {
+    if (e.target === this) closeEditUsernameModal();
+  });
+}
 
 // ── Edit TV Username & Retry ──────────────────────────────────────
-let currentEditOrderId = null;
-
 function openEditUsernameModal(orderId, currentUsername) {
   currentEditOrderId = orderId;
   document.getElementById('edit-username-order-label').textContent = 'Order: ' + orderId;
