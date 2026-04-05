@@ -436,17 +436,19 @@ input:focus, select:focus { border-color: var(--cyan2); }
     <div class="section">
       <div class="section-header">
         <div class="section-title">Rekrut Affiliate</div>
-        <button class="btn btn-primary btn-sm" onclick="createRecruitLink()">+ Buat Link</button>
       </div>
       <div class="alert" id="recruit-alert"></div>
 
       <!-- Commission info card -->
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:16px;">
         <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:12px;">Info Komisi Rekrutmen</div>
         <div id="recruit-commission-info" style="font-size:13px;color:var(--muted);line-height:1.8;">Loading...</div>
       </div>
 
-      <!-- Recruitment links table -->
+      <!-- Inline create form (rendered dynamically) -->
+      <div id="recruit-form-area"></div>
+
+      <!-- Links table -->
       <div id="recruit-content"><div class="empty"><span class="spinner"></span> Loading...</div></div>
     </div>
 
@@ -604,7 +606,13 @@ function showPage(name) {
 
   if (name === 'commissions') loadCommissions();
   if (name === 'referrals') loadReferrals();
-  if (name === 'recruit') { loadRecruitLinks(); loadDownline(); updateRecruitInfoCard(JSON.parse(localStorage.getItem('affiliate_data') || '{}')); }
+  if (name === 'recruit') {
+    const aff = JSON.parse(localStorage.getItem('affiliate_data') || '{}');
+    updateRecruitInfoCard(aff);
+    renderCreateLinkForm(aff);
+    loadRecruitLinks();
+    loadDownline();
+  }
   if (name === 'withdraw') loadWithdrawable();
   if (name === 'payouts') loadPayouts();
 }
@@ -720,6 +728,7 @@ async function loadDashboard() {
     document.getElementById('nav-user').textContent = aff.name;
     document.getElementById('nav-ref').textContent = aff.ref_code;
     updateRecruitInfoCard(aff);
+    renderCreateLinkForm(aff);
     loadDownline();
 
     document.getElementById('stat-total-earned').textContent = fmtRp(s.total_earned);
@@ -954,18 +963,19 @@ async function loadRecruitLinks() {
   try {
     const data = await api('GET', '/affiliate/recruitment-links');
     if (!data.links.length) {
-      container.innerHTML = '<div class="empty">Belum ada link rekrutmen. Klik "+ Buat Link" untuk membuat.</div>';
+      container.innerHTML = '<div class="empty">Belum ada link rekrutmen. Buat link pertamamu di atas.</div>';
       return;
     }
 
     const baseUrl = window.location.origin + '/affiliate/?join=';
-    let html = '<div class="table-wrap"><table><thead><tr><th>Label</th><th>Link</th><th>Digunakan</th><th>Dibuat</th><th>Status</th><th></th></tr></thead><tbody>';
+    let html = '<div class="table-wrap"><table><thead><tr><th>Label</th><th>Komisi Downline</th><th>Link</th><th>Digunakan</th><th>Dibuat</th><th>Status</th><th></th></tr></thead><tbody>';
     for (const link of data.links) {
       const url = baseUrl + link.token;
       const isActive = link.is_active;
       html += '<tr>' +
-        '<td>' + (link.label || '<span style="color:var(--muted)">—</span>') + '</td>' +
-        '<td style="max-width:200px"><div style="display:flex;align-items:center;gap:6px;">' +
+        '<td><strong>' + link.label + '</strong></td>' +
+        '<td><span class="badge badge-cyan mono">' + parseFloat(link.commission || 0).toFixed(0) + '%</span></td>' +
+        '<td style="max-width:180px"><div style="display:flex;align-items:center;gap:6px;">' +
           '<input type="text" value="' + url + '" readonly style="font-size:11px;background:var(--bg2);border:1px solid var(--border);color:var(--cyan);padding:4px 8px;border-radius:4px;width:100%;font-family:JetBrains Mono,monospace;"/>' +
           '<button class="btn btn-ghost btn-sm" onclick="copyToClipboard(\'' + url + '\', this)" style="flex-shrink:0">📋</button>' +
         '</div></td>' +
@@ -982,15 +992,22 @@ async function loadRecruitLinks() {
   }
 }
 
-async function createRecruitLink() {
-  const label = prompt('Label untuk link ini (opsional, misal: "Instagram", "Telegram"):');
-  try {
-    await api('POST', '/affiliate/recruitment-links', { label: label || undefined });
-    showPageAlert('recruit-alert', 'Link rekrutmen berhasil dibuat!', 'success');
-    loadRecruitLinks();
-  } catch (e) {
-    showPageAlert('recruit-alert', e.message, 'error');
+function createRecruitLink() {
+  const label = document.getElementById('new-link-label').value.trim();
+  const commission = parseInt(document.getElementById('new-link-commission').value) * 10;
+
+  if (!label) {
+    showPageAlert('recruit-alert', 'Label wajib diisi', 'error');
+    return;
   }
+
+  api('POST', '/affiliate/recruitment-links', { label, commission })
+    .then(() => {
+      showPageAlert('recruit-alert', 'Link rekrutmen berhasil dibuat!', 'success');
+      document.getElementById('new-link-label').value = '';
+      loadRecruitLinks();
+    })
+    .catch(e => showPageAlert('recruit-alert', e.message, 'error'));
 }
 
 async function deactivateRecruitLink(id) {
@@ -1189,6 +1206,109 @@ function updateRecruitInfoCard(affiliate) {
     (myComm - maxGiveaway) + '% – ' + (myComm - minGiveaway) + '%</strong><br/>' +
     '<span style="color:var(--muted);font-size:12px;">Kamu harus menyisakan minimal 10% untuk dirimu sendiri. ' +
     'Link rekrutmen bersifat permanen dan bisa digunakan berkali-kali.</span>';
+}
+
+// ── Create Link Form ─────────────────────────────────────────────
+function renderCreateLinkForm(affiliate) {
+  const maxComm = parseFloat(affiliate.max_commission || affiliate.commission_value || 0);
+  const container = document.getElementById('recruit-form-area');
+  if (!container) return;
+
+  if (maxComm < 20) {
+    container.innerHTML = '<div style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.15);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--red);">' +
+      'Komisi kamu (' + maxComm + '%) terlalu kecil untuk membuat link rekrutmen. ' +
+      'Minimum max komisi adalah 20% (10% untuk kamu, 10% untuk downline). Hubungi admin untuk upgrade komisi.' +
+      '</div>';
+    return;
+  }
+
+  const minGive = 10;
+  const maxGive = maxComm - 10;
+  const steps = Math.floor(maxGive / 10);
+  const defaultStep = 1;
+
+  let dotsHtml = '';
+  for (let i = 1; i <= steps; i++) {
+    dotsHtml += '<div id="rldot-' + i + '" style="width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .15s;flex-shrink:0;"></div>';
+  }
+
+  container.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:24px;">' +
+    '<div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:\'JetBrains Mono\',monospace;margin-bottom:16px;">Buat Link Rekrutmen Baru</div>' +
+
+    '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:16px;align-items:end;">' +
+
+    '<div>' +
+      '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Label <span style="color:var(--red)">*</span></label>' +
+      '<input type="text" id="new-link-label" placeholder="mis: Instagram, Telegram, WhatsApp" ' +
+        'style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;font-family:\'DM Sans\',sans-serif;outline:none;" ' +
+        'onfocus="this.style.borderColor=\'var(--cyan2)\'" onblur="this.style.borderColor=\'var(--border)\'"/>' +
+    '</div>' +
+
+    '<div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">' +
+        '<label style="font-size:11px;color:var(--muted);">Komisi untuk downline <span style="color:var(--red)">*</span></label>' +
+        '<span style="font-size:14px;font-weight:700;color:var(--cyan);font-family:\'JetBrains Mono\',monospace;" id="rl-commission-display">' + minGive + '%</span>' +
+      '</div>' +
+
+      '<div style="position:relative;height:36px;display:flex;align-items:center;">' +
+        '<input type="range" id="new-link-commission" min="1" max="' + steps + '" step="1" value="' + defaultStep + '" ' +
+          'style="width:100%;position:absolute;z-index:2;opacity:0;cursor:pointer;height:100%;" ' +
+          'oninput="updateRecruitSlider(' + maxComm + ')"/>' +
+        '<div style="position:absolute;left:0;right:0;height:2px;background:var(--border);border-radius:1px;z-index:0;"></div>' +
+        '<div id="rl-track-fill" style="position:absolute;left:0;height:2px;background:var(--cyan2);border-radius:1px;z-index:1;width:' + Math.round(100/steps) + '%;"></div>' +
+        '<div style="position:absolute;left:0;right:0;display:flex;justify-content:space-between;padding:0 3px;z-index:0;">' +
+          dotsHtml +
+        '</div>' +
+      '</div>' +
+
+      '<div style="display:flex;justify-content:space-between;margin-top:4px;">' +
+        '<span style="font-size:10px;color:var(--muted);">' + minGive + '%</span>' +
+        '<span style="font-size:10px;color:var(--muted);">' + maxGive + '%</span>' +
+      '</div>' +
+
+      '<div style="margin-top:10px;background:var(--card2);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--muted);">' +
+        'Spread untukmu: <strong style="color:var(--white);" id="rl-spread-display">' + (maxComm - minGive) + '%</strong>' +
+        ' &nbsp;·&nbsp; Downline dapat: <strong style="color:var(--cyan);" id="rl-downline-display">' + minGive + '%</strong>' +
+      '</div>' +
+    '</div>' +
+
+    '<button class="btn btn-primary" onclick="createRecruitLink()" style="height:38px;white-space:nowrap;">+ Buat Link</button>' +
+
+    '</div></div>';
+
+  updateRecruitSlider(maxComm);
+}
+
+function updateRecruitSlider(maxComm) {
+  const slider = document.getElementById('new-link-commission');
+  if (!slider) return;
+  const val = parseInt(slider.value);
+  const give = val * 10;
+  const spread = maxComm - give;
+  const steps = parseInt(slider.max);
+
+  document.getElementById('rl-commission-display').textContent = give + '%';
+  document.getElementById('rl-spread-display').textContent = spread + '%';
+  document.getElementById('rl-downline-display').textContent = give + '%';
+
+  const fillPct = Math.round((val / steps) * 100);
+  const fill = document.getElementById('rl-track-fill');
+  if (fill) fill.style.width = fillPct + '%';
+
+  for (let i = 1; i <= steps; i++) {
+    const dot = document.getElementById('rldot-' + i);
+    if (dot) {
+      if (i <= val) {
+        dot.style.background = 'var(--cyan)';
+        dot.style.width = '8px';
+        dot.style.height = '8px';
+      } else {
+        dot.style.background = 'var(--border)';
+        dot.style.width = '6px';
+        dot.style.height = '6px';
+      }
+    }
+  }
 }
 
 // ── Init ─────────────────────────────────────────────────────────
