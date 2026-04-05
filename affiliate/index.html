@@ -366,12 +366,17 @@ input:focus, select:focus { border-color: var(--cyan2); }
       <div class="ref-card-title">Kode Referral Kamu</div>
       <div class="ref-code-row">
         <div class="ref-code-display" id="ref-code-display">—</div>
-        <button class="ref-copy-btn" onclick="copyRefCode()">📋 Copy</button>
+        <button class="ref-copy-btn" onclick="copyRefCode()">📋 Copy Kode</button>
       </div>
-      <div class="ref-instructions">
-        Cara pakai: saat checkout Scalev, minta customer isi kolom <strong>notes</strong> dengan format:<br/>
-        <code>tvUsername|REFCODE</code><br/>
-        Contoh: <code id="ref-example">mahiralgo|CODE</code>
+
+      <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+
+      <div class="ref-card-title">Link Siap Share ke Calon Pembeli</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+        Bagikan link di bawah ke calon pembeli. Ref code kamu sudah otomatis tertanam — kamu dapat komisi jika mereka beli lewat link ini.
+      </div>
+      <div id="shareable-links">
+        <div style="font-size:12px;color:var(--muted);">Loading...</div>
       </div>
     </div>
 
@@ -725,7 +730,7 @@ async function loadDashboard() {
     document.getElementById('stat-referrals').textContent = s.total_referrals;
 
     document.getElementById('ref-code-display').textContent = aff.ref_code;
-    document.getElementById('ref-example').textContent = 'mahiralgo|' + aff.ref_code;
+    loadShareableLinks(aff.ref_code);
   } catch (e) {
     console.error('Dashboard load error:', e);
   }
@@ -1027,6 +1032,55 @@ async function loadPayouts() {
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="4" class="empty">Gagal memuat: ' + e.message + '</td></tr>';
   }
+}
+
+// ── Shareable Links ──────────────────────────────────────────────
+async function loadShareableLinks(refCode) {
+  const container = document.getElementById('shareable-links');
+  if (!container) return;
+
+  try {
+    const res = await fetch(API + '/products');
+    const data = await res.json();
+
+    if (!data.products || !data.products.length) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--muted);">Belum ada produk tersedia.</div>';
+      return;
+    }
+
+    container.innerHTML = data.products.map(p => {
+      const url = p.checkout_url + '?ref=' + refCode;
+      const label = p.months ? p.months + ' Bulan' : 'Lifetime';
+      const safeUrl = url.replace(/'/g, "\\'");
+      return `
+        <div style="margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:4px;letter-spacing:.5px;">
+            ${p.product_name} · ${label}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="text" value="${url}" readonly
+              style="flex:1;font-size:11px;background:var(--bg2);border:1px solid var(--border);
+                     color:var(--cyan);padding:7px 10px;border-radius:6px;
+                     font-family:'JetBrains Mono',monospace;outline:none;"/>
+            <button class="ref-copy-btn" onclick="copyShareLink('${safeUrl}', this)"
+              style="flex-shrink:0;white-space:nowrap;font-size:12px;">
+              📋 Copy
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+
+  } catch(e) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--muted);">Gagal memuat link.</div>';
+  }
+}
+
+function copyShareLink(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
 }
 
 // ── Downline Tree ────────────────────────────────────────────────
