@@ -164,50 +164,116 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
         <h3>Form Pemesanan</h3>
         <p>Isi data dengan benar — akses TradingView dikirim setelah konfirmasi pembayaran</p>
       </div>
-      <div style="padding:14px 16px 0;">
-        <div style="background:rgba(0,200,215,.06);border:1px solid rgba(0,200,215,.15);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+      <div class="co-form-body" style="padding:20px 24px;">
+        <div id="affiliate-banner" style="display:none;background:rgba(0,200,215,.08);border:1px solid rgba(0,200,215,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+          <div style="font-size:11px;color:#18B0C0;font-weight:700;margin-bottom:4px;">🤝 Kamu diundang oleh affiliate</div>
+          <div style="font-size:13px;color:#0C1628;">Kode referral <strong id="ref-code-display" style="color:#18B0C0;"></strong> sudah otomatis tercatat</div>
+        </div>
+
+        <div id="checkout-alert" style="display:none;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px;"></div>
+
+        <div style="margin-bottom:14px;">
+          <label style="font-size:11px;font-weight:600;color:#4A7080;display:block;margin-bottom:5px;">Nama Lengkap</label>
+          <input type="text" id="f-name" placeholder="Nama kamu" style="width:100%;padding:10px 14px;border:1px solid #dce3ea;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:#0C1628;transition:border-color .2s;" onfocus="this.style.borderColor='#18B0C0'" onblur="this.style.borderColor='#dce3ea'"/>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label style="font-size:11px;font-weight:600;color:#4A7080;display:block;margin-bottom:5px;">Email</label>
+          <input type="email" id="f-email" placeholder="email@example.com" style="width:100%;padding:10px 14px;border:1px solid #dce3ea;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:#0C1628;transition:border-color .2s;" onfocus="this.style.borderColor='#18B0C0'" onblur="this.style.borderColor='#dce3ea'"/>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label style="font-size:11px;font-weight:600;color:#4A7080;display:block;margin-bottom:5px;">No. WhatsApp</label>
+          <input type="tel" id="f-phone" placeholder="08xxxxxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #dce3ea;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:#0C1628;transition:border-color .2s;" onfocus="this.style.borderColor='#18B0C0'" onblur="this.style.borderColor='#dce3ea'"/>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label style="font-size:11px;font-weight:600;color:#4A7080;display:block;margin-bottom:5px;">Username TradingView</label>
+          <input type="text" id="f-tvuser" placeholder="contoh: mahiralgo" style="width:100%;padding:10px 14px;border:1px solid #dce3ea;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:#0C1628;transition:border-color .2s;" onfocus="this.style.borderColor='#18B0C0'" onblur="this.style.borderColor='#dce3ea'"/>
+          <div style="font-size:10px;color:#4A7080;margin-top:4px;">Bukan email — lihat panduan di kiri untuk menemukan username kamu</div>
+        </div>
+
+        <div style="background:rgba(0,200,215,.04);border:1px solid rgba(0,200,215,.12);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
           <div style="font-size:10px;font-weight:700;color:#18B0C0;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">📌 Cara melihat username TradingView kamu</div>
           <img src="data/username_tradingview.png" alt="Cara melihat username TradingView" style="width:100%;border-radius:7px;display:block;"/>
-          <p style="font-size:11px;color:#4A7080;margin:8px 0 0;line-height:1.6;">Isi username TradingView kamu dengan benar — bukan email atau nama lengkap. Akses indikator dikirim ke username tersebut.</p>
         </div>
-      </div>
-      <div style="background:rgba(0,200,215,.06);border:1px solid rgba(0,200,215,.15);border-radius:10px;padding:14px 18px;margin-top:16px;">
-        <div style="font-size:10px;font-weight:700;color:#0A4A52;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">📬 Setelah pembayaran berhasil</div>
-        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
-          <div style="width:20px;height:20px;border-radius:50%;background:rgba(0,74,82,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#0A4A52;">1</div>
-          <div style="font-size:12px;color:#1a2940;line-height:1.6;">Cek email kamu — konfirmasi akses + panduan TradingView akan dikirim otomatis dalam beberapa menit</div>
+
+        <div style="margin-bottom:18px;">
+          <label style="font-size:11px;font-weight:600;color:#4A7080;display:block;margin-bottom:8px;">Metode Pembayaran</label>
+
+          <div id="payment-methods" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="qris" style="accent-color:#18B0C0;"/> QRIS
+            </label>
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="dana" style="accent-color:#18B0C0;"/> Dana
+            </label>
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="gopay" style="accent-color:#18B0C0;"/> GoPay
+            </label>
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="ovo" style="accent-color:#18B0C0;"/> OVO
+            </label>
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="shopeepay" style="accent-color:#18B0C0;"/> ShopeePay
+            </label>
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="linkaja" style="accent-color:#18B0C0;"/> LinkAja
+            </label>
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;grid-column:1/-1;">
+              <input type="radio" name="payment" value="va" style="accent-color:#18B0C0;" onchange="document.getElementById('va-options').style.display='flex'"/> Virtual Account (Transfer Bank)
+            </label>
+          </div>
+
+          <div id="va-options" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;padding:10px 12px;background:#f8fafc;border:1px solid #dce3ea;border-radius:8px;">
+            <div style="font-size:10px;color:#4A7080;font-weight:600;width:100%;margin-bottom:4px;">Pilih Bank:</div>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
+              <input type="radio" name="va_bank" value="BNI" style="accent-color:#18B0C0;"/> BNI
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
+              <input type="radio" name="va_bank" value="BRI" style="accent-color:#18B0C0;"/> BRI
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
+              <input type="radio" name="va_bank" value="MANDIRI" style="accent-color:#18B0C0;"/> Mandiri
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
+              <input type="radio" name="va_bank" value="BSI" style="accent-color:#18B0C0;"/> BSI
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
+              <input type="radio" name="va_bank" value="CIMB" style="accent-color:#18B0C0;"/> CIMB
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
+              <input type="radio" name="va_bank" value="PERMATA" style="accent-color:#18B0C0;"/> Permata
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
+              <input type="radio" name="va_bank" value="BJB" style="accent-color:#18B0C0;"/> BJB
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
+              <input type="radio" name="va_bank" value="SAHABAT_SAMPOERNA" style="accent-color:#18B0C0;"/> Sampoerna
+            </label>
+          </div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
-          <div style="width:20px;height:20px;border-radius:50%;background:rgba(0,74,82,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#0A4A52;">2</div>
-          <div style="font-size:12px;color:#1a2940;line-height:1.6;">Login TradingView dengan akun yang kamu daftarkan → Indicators → Personal → Invite-only → Evans Trading Class</div>
+
+        <div style="background:rgba(0,200,215,.06);border:1px solid rgba(0,200,215,.15);border-radius:10px;padding:14px 18px;margin-bottom:18px;">
+          <div style="font-size:10px;font-weight:700;color:#0A4A52;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">📬 Setelah pembayaran berhasil</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:rgba(0,74,82,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#0A4A52;">1</div>
+            <div style="font-size:12px;color:#1a2940;line-height:1.6;">Cek email kamu — konfirmasi akses + panduan TradingView akan dikirim otomatis dalam beberapa menit</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:rgba(0,74,82,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#0A4A52;">2</div>
+            <div style="font-size:12px;color:#1a2940;line-height:1.6;">Login TradingView → Indicators → Personal → Invite-only → Evans Trading Class</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:rgba(0,74,82,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#0A4A52;">3</div>
+            <div style="font-size:12px;color:#1a2940;line-height:1.6;">Ada masalah? Hubungi CS: <a href="https://t.me/ETCIndicator" style="color:#18B0C0;font-weight:700;text-decoration:none;">@ETCIndicator di Telegram</a></div>
+          </div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;">
-          <div style="width:20px;height:20px;border-radius:50%;background:rgba(0,74,82,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#0A4A52;">3</div>
-          <div style="font-size:12px;color:#1a2940;line-height:1.6;">Belum dapat email atau ada masalah? Hubungi CS: <a href="https://t.me/ETCIndicator" style="color:#18B0C0;font-weight:700;text-decoration:none;">@ETCIndicator di Telegram</a></div>
-        </div>
-      </div>
-            <div class="co-form-body">
-        <iframe id="myiframe" width="100%" frameborder="0" src="https://store.evanstradingclass.com/checkout-test"></iframe><script>const iframe=document.getElementById('myiframe')
-        function resizeIframe(height){iframe.style.height=height+'px'}
-        function isUrl(string){try{new URL(string)
-        return true}catch(_){return false}}
-        function isJSONObject(string){try{const parsed=JSON.parse(string)
-        return typeof parsed==='object'&&parsed!==null}catch(e){return false}}
-        function isIframeSameOrigin(){try{const doc=iframe.contentDocument||iframe.contentWindow.document
-        return true}catch(e){return false}}
-        window.addEventListener('message',function(e){if(e.origin==='https://store.evanstradingclass.com'){if(isUrl(e.data)){location.href=e.data}
-        if(isJSONObject(e.data)&&!isIframeSameOrigin()){const message=JSON.parse(e.data)
-        if(message.type==='resize'){resizeIframe(message.height)}}}},false)
-        document.addEventListener('DOMContentLoaded', function () {var observer = new IntersectionObserver(function (entries) {
-        entries.forEach((entry) => {if (entry.isIntersecting) {
-        iframe.src = iframe.src
-        observer.disconnect()}})})
-        observer.observe(iframe)})</script>
-      </div></div></div>
-          </form>
-        </div>
+
+        <button class="co-btn" id="submit-btn" onclick="submitOrder()" style="margin-top:0;">Bayar Sekarang — Rp 10.000</button>
       </div>
     </div>
+  </div>
     <p style="font-size:11px;color:var(--muted);margin-top:14px;line-height:1.7;text-align:center">
       ⚠️ Tidak ada jaminan profit · Bukan financial advice<br/>Akses diberikan sebagai undangan TradingView Private Script
     </p>
@@ -226,6 +292,126 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
 var cur=document.getElementById('cur'),curR=document.getElementById('curR'),mx=0,my=0,rx=0,ry=0;
 document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
 (function loop(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;cur.style.left=mx+'px';cur.style.top=my+'px';curR.style.left=rx+'px';curR.style.top=ry+'px';requestAnimationFrame(loop);})();
+
+// ── Checkout Logic ────────────────────────────────────────────────
+var API = 'https://etc-tv-server-production.up.railway.app';
+
+// Read ref code from URL
+var urlParams = new URLSearchParams(window.location.search);
+var refCode = urlParams.get('ref');
+if (refCode) {
+  document.getElementById('affiliate-banner').style.display = 'block';
+  document.getElementById('ref-code-display').textContent = refCode.toUpperCase();
+}
+
+// Hide VA options when other payment selected
+document.querySelectorAll('input[name="payment"]').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    if (this.value !== 'va') {
+      document.getElementById('va-options').style.display = 'none';
+    } else {
+      document.getElementById('va-options').style.display = 'flex';
+    }
+    // Highlight selected
+    document.querySelectorAll('.pm-opt').forEach(function(el) {
+      el.style.borderColor = '#dce3ea';
+      el.style.background = '#fff';
+    });
+    this.closest('.pm-opt').style.borderColor = '#18B0C0';
+    this.closest('.pm-opt').style.background = 'rgba(0,200,215,.04)';
+  });
+});
+
+function showCheckoutAlert(msg, type) {
+  var el = document.getElementById('checkout-alert');
+  el.textContent = msg;
+  el.style.display = 'block';
+  if (type === 'error') {
+    el.style.background = 'rgba(255,68,68,.08)';
+    el.style.border = '1px solid rgba(255,68,68,.2)';
+    el.style.color = '#CC3333';
+  } else {
+    el.style.background = 'rgba(0,200,215,.08)';
+    el.style.border = '1px solid rgba(0,200,215,.2)';
+    el.style.color = '#18B0C0';
+  }
+}
+
+async function submitOrder() {
+  var name = document.getElementById('f-name').value.trim();
+  var email = document.getElementById('f-email').value.trim();
+  var phone = document.getElementById('f-phone').value.trim();
+  var tvuser = document.getElementById('f-tvuser').value.trim();
+  var paymentEl = document.querySelector('input[name="payment"]:checked');
+  var payment = paymentEl ? paymentEl.value : null;
+
+  // Validate
+  if (!name || !email || !phone || !tvuser) {
+    showCheckoutAlert('Semua field wajib diisi', 'error');
+    return;
+  }
+  if (!email.includes('@')) {
+    showCheckoutAlert('Format email tidak valid', 'error');
+    return;
+  }
+  if (!payment) {
+    showCheckoutAlert('Pilih metode pembayaran', 'error');
+    return;
+  }
+
+  var sub_payment_method = null;
+  if (payment === 'va') {
+    var vaEl = document.querySelector('input[name="va_bank"]:checked');
+    if (!vaEl) {
+      showCheckoutAlert('Pilih bank untuk Virtual Account', 'error');
+      return;
+    }
+    sub_payment_method = vaEl.value;
+  }
+
+  // Loading state
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+  btn.style.opacity = '0.6';
+  document.getElementById('checkout-alert').style.display = 'none';
+
+  try {
+    var body = {
+      product: 'test',
+      tv_username: tvuser,
+      customer_name: name,
+      customer_email: email,
+      customer_phone: phone,
+      payment_method: payment
+    };
+    if (sub_payment_method) body.sub_payment_method = sub_payment_method;
+    if (refCode) body.ref_code = refCode;
+
+    var res = await fetch(API + '/checkout/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Gagal membuat order');
+    }
+
+    // Redirect to payment
+    showCheckoutAlert('Order berhasil! Mengalihkan ke halaman pembayaran...', 'success');
+    setTimeout(function() {
+      window.location.href = data.payment_url;
+    }, 1000);
+
+  } catch (err) {
+    showCheckoutAlert(err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Bayar Sekarang — Rp 10.000';
+    btn.style.opacity = '1';
+  }
+}
 </script>
 
 </body>
