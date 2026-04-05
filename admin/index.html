@@ -170,6 +170,7 @@ select option { background: var(--bg2); }
 
 /* EMPTY */
 .empty { text-align: center; padding: 48px; color: var(--muted); font-size: 13px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* TOGGLE */
 .toggle {
@@ -350,31 +351,40 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
 
   <!-- AFFILIATES -->
   <div class="page" id="page-affiliates">
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Affiliate Members</div>
-        <div style="display:flex;gap:8px">
-          <select id="aff-status-filter" onchange="loadAffiliates()" style="font-size:12px;padding:6px 10px">
-            <option value="">Semua</option>
-            <option value="pending">Pending</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-          </select>
-          <button class="btn btn-ghost btn-sm" onclick="loadAffiliates()">↻ Refresh</button>
-        </div>
+    <!-- View toggle -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;gap:4px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:3px;">
+        <button class="btn btn-sm" id="view-list-btn" onclick="setAffView('list')"
+          style="background:var(--cyan2);color:var(--bg);">List</button>
+        <button class="btn btn-sm" id="view-tree-btn" onclick="setAffView('tree')"
+          style="background:transparent;color:var(--muted);">Tree</button>
       </div>
-      <div id="alert-affiliates" class="alert"></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="aff-status-filter" onchange="loadAffiliates()" style="font-size:12px;padding:6px 10px">
+          <option value="">Semua Status</option>
+          <option value="pending">Pending</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="currentAffView==='list'?loadAffiliates():loadAffiliateTree()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div id="alert-affiliates" class="alert"></div>
+
+    <!-- LIST VIEW -->
+    <div id="aff-list-view">
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Nama</th>
-              <th>Email</th>
               <th>Ref Code</th>
+              <th>Tipe</th>
               <th>Komisi</th>
+              <th>Upline</th>
               <th>Referral</th>
               <th>Earned</th>
-              <th>Pending</th>
               <th>Status</th>
               <th>Aksi</th>
             </tr>
@@ -383,6 +393,13 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
             <tr><td colspan="9" class="empty">Loading...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- TREE VIEW -->
+    <div id="aff-tree-view" style="display:none;">
+      <div id="affiliate-tree-content">
+        <div class="empty">Klik ↻ Refresh untuk memuat tree</div>
       </div>
     </div>
   </div>
@@ -416,35 +433,71 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
 
 <!-- MODAL: Affiliate Detail -->
 <div class="modal-overlay" id="affiliate-modal">
-  <div class="modal" style="width:560px">
+  <div class="modal" style="width:600px;max-height:90vh;overflow-y:auto;">
     <h3 id="aff-modal-name">AFFILIATE DETAIL</h3>
-    <p id="aff-modal-email" style="margin-bottom:8px"></p>
-    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+    <p id="aff-modal-meta" style="margin-bottom:12px;font-size:12px;color:var(--muted)"></p>
+
+    <!-- Badges row -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <span id="aff-modal-refcode" class="badge badge-cyan"></span>
       <span id="aff-modal-commission" class="badge badge-muted"></span>
+      <span id="aff-modal-type-badge"></span>
       <span id="aff-modal-status-badge"></span>
     </div>
 
-    <div class="form-row cols-3" style="margin-bottom:20px">
-      <div class="stat-card" style="padding:14px 16px">
+    <!-- Upline context -->
+    <div id="aff-upline-context" style="display:none;background:rgba(0,200,215,.06);border:1px solid rgba(0,200,215,.15);border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <div style="font-size:10px;color:var(--cyan);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;">Upline Chain</div>
+      <div id="aff-upline-chain" style="font-size:13px;line-height:1.8;"></div>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+      <div class="stat-card" style="padding:12px 14px;">
         <div class="stat-label">Total Earned</div>
-        <div class="stat-value" id="aff-stat-earned" style="font-size:20px">—</div>
+        <div class="stat-value" id="aff-stat-earned" style="font-size:18px;">—</div>
       </div>
-      <div class="stat-card" style="padding:14px 16px">
+      <div class="stat-card" style="padding:12px 14px;">
         <div class="stat-label">Pending</div>
-        <div class="stat-value" id="aff-stat-pending" style="font-size:20px;color:var(--gold)">—</div>
+        <div class="stat-value" id="aff-stat-pending" style="font-size:18px;color:var(--gold);">—</div>
       </div>
-      <div class="stat-card" style="padding:14px 16px">
+      <div class="stat-card" style="padding:12px 14px;">
         <div class="stat-label">Referrals</div>
-        <div class="stat-value" id="aff-stat-referrals" style="font-size:20px">—</div>
+        <div class="stat-value" id="aff-stat-referrals" style="font-size:18px;">—</div>
       </div>
     </div>
 
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px">KOMISI TERBARU</div>
-    <div class="table-wrap" style="margin-bottom:20px;max-height:200px;overflow-y:auto">
+    <!-- Set Master / Edit Commission section -->
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:12px;">Set Tipe & Komisi</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Tipe Affiliate</label>
+          <select id="aff-edit-type" style="font-size:12px;padding:7px 10px;">
+            <option value="affiliate">Affiliate</option>
+            <option value="master_affiliate">Master Affiliate</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Max Komisi (%)</label>
+          <input type="number" id="aff-edit-max-commission" min="10" max="100" step="1"
+            style="font-size:12px;padding:7px 10px;" placeholder="mis: 30"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Komisi Aktif (%)</label>
+          <input type="number" id="aff-edit-commission" min="10" max="100" step="1"
+            style="font-size:12px;padding:7px 10px;" placeholder="mis: 20"/>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveMasterSetting()">Simpan Perubahan</button>
+    </div>
+
+    <!-- Recent commissions -->
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">KOMISI TERBARU</div>
+    <div class="table-wrap" style="margin-bottom:16px;max-height:180px;overflow-y:auto;">
       <table>
-        <thead><tr><th>Tanggal</th><th>TV User</th><th>Komisi</th><th>Status</th></tr></thead>
-        <tbody id="aff-modal-commissions"><tr><td colspan="4" class="empty">—</td></tr></tbody>
+        <thead><tr><th>Tanggal</th><th>TV User</th><th>Komisi</th><th>Tipe</th><th>Status</th></tr></thead>
+        <tbody id="aff-modal-commissions"><tr><td colspan="5" class="empty">—</td></tr></tbody>
       </table>
     </div>
 
@@ -768,13 +821,24 @@ function showAlert(page, msg, type) {
   setTimeout(() => el.classList.remove('show'), 4000);
 }
 
-// Close modal on overlay click
-document.getElementById('product-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeProductModal();
-});
-
 // ── Affiliates ────────────────────────────────────────────────────
 let currentAffiliateId = null;
+let currentAffiliateData = null;
+let currentAffView = 'list';
+
+function setAffView(view) {
+  currentAffView = view;
+  document.getElementById('aff-list-view').style.display = view === 'list' ? 'block' : 'none';
+  document.getElementById('aff-tree-view').style.display = view === 'tree' ? 'block' : 'none';
+  document.getElementById('view-list-btn').style.cssText = view === 'list'
+    ? 'background:var(--cyan2);color:var(--bg);'
+    : 'background:transparent;color:var(--muted);';
+  document.getElementById('view-tree-btn').style.cssText = view === 'tree'
+    ? 'background:var(--cyan2);color:var(--bg);'
+    : 'background:transparent;color:var(--muted);';
+  if (view === 'tree') loadAffiliateTree();
+  else loadAffiliates();
+}
 
 async function loadAffiliates() {
   const status = document.getElementById('aff-status-filter').value;
@@ -783,13 +847,25 @@ async function loadAffiliates() {
     const { affiliates } = await api('GET', url);
     document.getElementById('affiliates-table').innerHTML = affiliates.length
       ? affiliates.map(a => `<tr>
-          <td><strong>${a.name}</strong></td>
-          <td style="font-size:12px;color:var(--muted)">${a.email}</td>
+          <td>
+            <strong>${a.name}</strong>
+            <div style="font-size:11px;color:var(--muted)">${a.email}</div>
+          </td>
           <td><span class="badge badge-cyan mono">${a.ref_code}</span></td>
-          <td style="font-size:12px">${a.commission_type === 'percent' ? a.commission_value + '%' : 'Rp ' + parseInt(a.commission_value).toLocaleString('id-ID')}</td>
+          <td>${a.affiliate_type === 'master_affiliate'
+            ? '<span class="badge" style="background:rgba(245,200,66,.15);color:var(--gold)">Master</span>'
+            : '<span class="badge badge-muted">Affiliate</span>'}</td>
+          <td style="font-size:12px">
+            ${a.commission_value}%
+            ${a.max_commission ? '<span style="color:var(--muted)"> / max ' + a.max_commission + '%</span>' : ''}
+          </td>
+          <td style="font-size:12px;color:var(--muted)">
+            ${a.upline_id
+              ? '<span style="font-family:JetBrains Mono,monospace;font-size:11px">' + (a.upline_ref_code || 'ID:'+a.upline_id) + '</span>'
+              : '<span style="color:var(--border)">—</span>'}
+          </td>
           <td class="mono">${a.total_referrals || 0}</td>
           <td class="mono" style="font-size:12px">Rp ${parseInt(a.total_earned || 0).toLocaleString('id-ID')}</td>
-          <td class="mono" style="font-size:12px;color:var(--gold)">Rp ${parseInt(a.pending_amount || 0).toLocaleString('id-ID')}</td>
           <td>${affiliateStatusBadge(a.status)}</td>
           <td><button class="btn btn-ghost btn-sm" onclick="openAffiliateModal(${a.id})">Detail</button></td>
         </tr>`).join('')
@@ -797,38 +873,132 @@ async function loadAffiliates() {
   } catch(e) { showAlert('affiliates', e.message, 'error'); }
 }
 
+async function loadAffiliateTree() {
+  const container = document.getElementById('affiliate-tree-content');
+  container.innerHTML = '<div class="empty"><span style="display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .6s linear infinite;"></span> Loading tree...</div>';
+
+  try {
+    const { tree, total } = await api('GET', '/admin/affiliates/tree');
+    container.innerHTML = '<div style="margin-bottom:12px;font-size:12px;color:var(--muted);">' + total + ' affiliate total</div>' +
+      renderAdminTree(tree, 0);
+  } catch(e) {
+    container.innerHTML = '<div class="empty">Gagal memuat: ' + e.message + '</div>';
+  }
+}
+
+function renderAdminTree(nodes, depth) {
+  if (!nodes || !nodes.length) return '';
+  let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+
+  for (const n of nodes) {
+    const sc = n.status === 'active' ? 'var(--green)' : n.status === 'pending' ? 'var(--gold)' : 'var(--red)';
+    const isMaster = n.affiliate_type === 'master_affiliate';
+    const indent = depth * 28;
+
+    html += `<div style="margin-left:${indent}px;">`;
+
+    if (depth > 0) {
+      html += '<div style="display:flex;align-items:center;gap:0;margin-bottom:4px;">' +
+        '<div style="width:20px;height:1px;background:var(--border);"></div>' +
+        '</div>';
+    }
+
+    html += `<div style="background:var(--card);border:1px solid ${isMaster ? 'rgba(245,200,66,.3)' : 'var(--border)'};border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">`;
+
+    html += '<div style="display:flex;align-items:center;gap:10px;">';
+    html += `<div style="width:8px;height:8px;border-radius:50%;background:${sc};flex-shrink:0;"></div>`;
+    html += '<div>';
+    html += `<div style="font-weight:600;font-size:13px;">${n.name}`;
+    if (isMaster) html += ' <span style="font-size:10px;color:var(--gold);font-family:JetBrains Mono,monospace;">MASTER</span>';
+    html += '</div>';
+    html += `<div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${n.ref_code} · ${n.commission_value}%${n.max_commission ? ' (max ' + n.max_commission + '%)' : ''}</div>`;
+    html += '</div></div>';
+
+    html += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
+    html += `<div style="text-align:right;"><div style="font-size:10px;color:var(--muted);">Referral</div><div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--cyan);">${n.total_referrals || 0}</div></div>`;
+    html += `<div style="text-align:right;"><div style="font-size:10px;color:var(--muted);">Earned</div><div style="font-size:12px;font-family:'JetBrains Mono',monospace;">Rp ${parseInt(n.total_earned || 0).toLocaleString('id-ID')}</div></div>`;
+    html += `<button class="btn btn-ghost btn-sm" onclick="openAffiliateModal(${n.id})">Detail</button>`;
+    html += '</div></div>';
+
+    if (n.children && n.children.length) {
+      html += '<div style="margin-left:' + (indent + 14) + 'px;border-left:2px solid var(--border);padding-left:0;margin-top:4px;">';
+      html += renderAdminTree(n.children, depth + 1);
+      html += '</div>';
+    }
+
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
 async function openAffiliateModal(id) {
   currentAffiliateId = id;
   document.getElementById('affiliate-modal').classList.add('open');
-  document.getElementById('aff-modal-commissions').innerHTML = '<tr><td colspan="4" class="empty">Loading...</td></tr>';
+  document.getElementById('aff-modal-commissions').innerHTML = '<tr><td colspan="5" class="empty">Loading...</td></tr>';
 
   try {
     const { affiliate: a, commissions } = await api('GET', `/admin/affiliates/${id}`);
+    currentAffiliateData = a;
 
     document.getElementById('aff-modal-name').textContent = a.name.toUpperCase();
-    document.getElementById('aff-modal-email').textContent = a.email + (a.phone ? ' · ' + a.phone : '');
+    document.getElementById('aff-modal-meta').textContent =
+      a.email + (a.phone ? ' · ' + a.phone : '') + ' · Bergabung ' + fmtDate(a.created_at);
     document.getElementById('aff-modal-refcode').textContent = a.ref_code;
     document.getElementById('aff-modal-commission').textContent =
-      a.commission_type === 'percent' ? `Komisi ${a.commission_value}%` : `Flat Rp ${parseInt(a.commission_value).toLocaleString('id-ID')}`;
+      `Komisi ${a.commission_value}%${a.max_commission ? ' / max ' + a.max_commission + '%' : ''}`;
+
+    document.getElementById('aff-modal-type-badge').innerHTML = a.affiliate_type === 'master_affiliate'
+      ? '<span class="badge" style="background:rgba(245,200,66,.15);color:var(--gold);">Master Affiliate</span>'
+      : '<span class="badge badge-muted">Affiliate</span>';
     document.getElementById('aff-modal-status-badge').innerHTML = affiliateStatusBadge(a.status);
 
+    // Upline context
+    if (a.upline_id) {
+      document.getElementById('aff-upline-context').style.display = 'block';
+      let chainHtml = '';
+      try {
+        const uplineRes = await api('GET', `/admin/affiliates/${a.upline_id}`);
+        const upline = uplineRes.affiliate;
+        chainHtml = `<strong>${upline.name}</strong> <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);">${upline.ref_code} · ${upline.commission_value}% · ${affiliateStatusBadge(upline.status)}</span>`;
+        if (upline.upline_id) chainHtml = '… → ' + chainHtml;
+        chainHtml += ` → <strong style="color:var(--cyan)">${a.name}</strong> (${a.commission_value}%)`;
+        if (a.upline_commission) {
+          chainHtml += `<br/><span style="font-size:12px;color:var(--muted);">Upline mendapat spread: ${parseFloat(upline.commission_value) - parseFloat(a.upline_commission)}% dari transaksi ${a.name}</span>`;
+        }
+      } catch(e) {
+        chainHtml = `Upline ID: ${a.upline_id}`;
+      }
+      document.getElementById('aff-upline-chain').innerHTML = chainHtml;
+    } else {
+      document.getElementById('aff-upline-context').style.display = 'none';
+    }
+
+    // Stats
     document.getElementById('aff-stat-earned').textContent = 'Rp ' + parseInt(a.total_earned || 0).toLocaleString('id-ID');
     document.getElementById('aff-stat-pending').textContent = 'Rp ' + parseInt(a.pending_amount || 0).toLocaleString('id-ID');
     document.getElementById('aff-stat-referrals').textContent = a.total_referrals || 0;
 
-    // Show/hide buttons based on status
+    // Pre-fill edit fields
+    document.getElementById('aff-edit-type').value = a.affiliate_type || 'affiliate';
+    document.getElementById('aff-edit-max-commission').value = a.max_commission || '';
+    document.getElementById('aff-edit-commission').value = a.commission_value || '';
+
+    // Show/hide approve/suspend
     document.getElementById('aff-approve-btn').style.display = a.status === 'active' ? 'none' : 'inline-flex';
     document.getElementById('aff-suspend-btn').style.display = a.status === 'suspended' ? 'none' : 'inline-flex';
 
     // Recent commissions
     document.getElementById('aff-modal-commissions').innerHTML = commissions.length
       ? commissions.slice(0, 10).map(c => `<tr>
-          <td style="font-size:12px">${fmtDate(c.created_at)}</td>
-          <td style="font-size:12px">${c.tv_username}</td>
-          <td class="mono" style="font-size:12px">Rp ${parseInt(c.commission_amount).toLocaleString('id-ID')}</td>
+          <td style="font-size:12px;">${fmtDate(c.created_at)}</td>
+          <td style="font-size:12px;">${c.tv_username}</td>
+          <td class="mono" style="font-size:12px;">Rp ${parseInt(c.commission_amount).toLocaleString('id-ID')}</td>
+          <td><span class="badge badge-muted" style="font-size:10px;">${c.type}</span></td>
           <td>${commissionStatusBadge(c.status)}</td>
         </tr>`).join('')
-      : '<tr><td colspan="4" class="empty">Belum ada komisi</td></tr>';
+      : '<tr><td colspan="5" class="empty">Belum ada komisi</td></tr>';
 
   } catch(e) {
     showAlert('affiliates', e.message, 'error');
@@ -839,28 +1009,53 @@ async function openAffiliateModal(id) {
 function closeAffiliateModal() {
   document.getElementById('affiliate-modal').classList.remove('open');
   currentAffiliateId = null;
+  currentAffiliateData = null;
+}
+
+async function saveMasterSetting() {
+  if (!currentAffiliateId) return;
+  const affiliate_type = document.getElementById('aff-edit-type').value;
+  const max_commission = document.getElementById('aff-edit-max-commission').value;
+  const commission_value = document.getElementById('aff-edit-commission').value;
+
+  if (!max_commission) return alert('Max komisi wajib diisi');
+
+  try {
+    await api('PUT', `/admin/affiliates/${currentAffiliateId}/set-master`, {
+      affiliate_type,
+      max_commission: parseFloat(max_commission),
+      commission_value: commission_value ? parseFloat(commission_value) : undefined
+    });
+    showAlert('affiliates', `Setting disimpan untuk affiliate #${currentAffiliateId}`, 'success');
+    openAffiliateModal(currentAffiliateId);
+    loadAffiliates();
+  } catch(e) { alert(e.message); }
 }
 
 async function approveAffiliate() {
   if (!currentAffiliateId) return;
-  if (!confirm('Approve affiliate ini?')) return;
+  const a = currentAffiliateData;
+  const confirmMsg = a && a.upline_id
+    ? `Approve affiliate ini?\n\nUpline: ${a.upline_name || 'ID:'+a.upline_id}\nKomisi yang diberikan ke affiliate ini: ${a.upline_commission || 0}%\n\nLanjutkan?`
+    : 'Approve affiliate ini?';
+  if (!confirm(confirmMsg)) return;
   try {
     await api('PUT', `/admin/affiliates/${currentAffiliateId}/approve`);
     closeAffiliateModal();
     loadAffiliates();
-    showAlert('affiliates', '✅ Affiliate diapprove', 'success');
-  } catch(e) { alert('❌ ' + e.message); }
+    showAlert('affiliates', 'Affiliate diapprove', 'success');
+  } catch(e) { alert(e.message); }
 }
 
 async function suspendAffiliate() {
   if (!currentAffiliateId) return;
-  if (!confirm('Suspend affiliate ini? Mereka tidak bisa login lagi.')) return;
+  if (!confirm('Suspend affiliate ini? Mereka tidak bisa login. Komisi upline mereka akan ter-skip ke upline di atasnya.')) return;
   try {
     await api('DELETE', `/admin/affiliates/${currentAffiliateId}`);
     closeAffiliateModal();
     loadAffiliates();
     showAlert('affiliates', 'Affiliate disuspend', 'success');
-  } catch(e) { alert('❌ ' + e.message); }
+  } catch(e) { alert(e.message); }
 }
 
 function affiliateStatusBadge(status) {
@@ -883,7 +1078,10 @@ function commissionStatusBadge(status) {
   return map[status] || `<span class="badge badge-muted">${status}</span>`;
 }
 
-// Close affiliate modal on overlay click
+// Close modals on overlay click
+document.getElementById('product-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeProductModal();
+});
 document.getElementById('affiliate-modal').addEventListener('click', function(e) {
   if (e.target === this) closeAffiliateModal();
 });
