@@ -298,7 +298,8 @@ input:focus, select:focus { border-color: var(--cyan2); }
 <div class="auth-screen" id="screen-register">
   <div class="auth-box">
     <h2>DAFTAR AFFILIATE</h2>
-    <p class="subtitle">Buat akun affiliate baru</p>
+    <p class="subtitle" id="reg-subtitle">Buat akun affiliate baru</p>
+    <div class="alert alert-info" id="recruit-info" style="display:none"></div>
     <div class="alert" id="register-alert"></div>
     <div class="form-group">
       <label>Nama Lengkap</label>
@@ -312,15 +313,16 @@ input:focus, select:focus { border-color: var(--cyan2); }
       <label>No. HP (opsional)</label>
       <input type="text" id="reg-phone" placeholder="08xxxxxxxxxx"/>
     </div>
-    <div class="form-group">
-      <label>Kode Referral</label>
-      <input type="text" id="reg-refcode" placeholder="KODEKAMU" style="text-transform:uppercase" maxlength="20"/>
-      <div class="hint">4–20 karakter, huruf dan angka saja, akan menjadi UPPERCASE</div>
+    <div class="form-group" id="refcode-group">
+      <label>Kode Referral (opsional)</label>
+      <input type="text" id="reg-refcode" placeholder="Kosongkan untuk auto-generate" style="text-transform:uppercase" maxlength="20"/>
+      <div class="hint">4–20 karakter alfanumerik. Jika dikosongkan, akan dibuat otomatis.</div>
     </div>
     <div class="form-group">
       <label>Password</label>
       <input type="password" id="reg-password" placeholder="Minimal 6 karakter"/>
     </div>
+    <input type="hidden" id="reg-recruitment-token" value=""/>
     <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="doRegister()" id="register-btn">Daftar</button>
     <div class="auth-link" onclick="showScreen('login')">Sudah punya akun? Login di sini</div>
   </div>
@@ -412,6 +414,22 @@ input:focus, select:focus { border-color: var(--cyan2); }
           <tbody id="referrals-table"><tr><td colspan="3" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- RECRUIT -->
+  <div class="page" id="page-recruit">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Link Rekrutmen</div>
+        <button class="btn btn-primary btn-sm" onclick="createRecruitLink()">+ Buat Link</button>
+      </div>
+      <div class="alert" id="recruit-alert"></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7;">
+        Buat link rekrutmen untuk mengajak orang bergabung sebagai affiliate di bawah kamu (downline).<br/>
+        Mereka akan otomatis terdaftar dan kamu mendapatkan komisi upline dari setiap penjualan mereka.
+      </p>
+      <div id="recruit-content"><div class="empty">Loading...</div></div>
     </div>
   </div>
 
@@ -540,6 +558,7 @@ function buildNav() {
     { id: 'overview', label: 'Overview' },
     { id: 'commissions', label: 'Komisi' },
     { id: 'referrals', label: 'Referral' },
+    { id: 'recruit', label: 'Rekrut' },
     { id: 'withdraw', label: 'Withdraw' },
     { id: 'payouts', label: 'Pembayaran' },
   ];
@@ -558,6 +577,7 @@ function showPage(name) {
 
   if (name === 'commissions') loadCommissions();
   if (name === 'referrals') loadReferrals();
+  if (name === 'recruit') loadRecruitLinks();
   if (name === 'withdraw') loadWithdrawable();
   if (name === 'payouts') loadPayouts();
 }
@@ -590,9 +610,10 @@ async function doRegister() {
   const phone = document.getElementById('reg-phone').value.trim();
   const ref_code = document.getElementById('reg-refcode').value.trim().toUpperCase();
   const password = document.getElementById('reg-password').value;
+  const recruitment_token = document.getElementById('reg-recruitment-token').value;
 
-  if (!name || !email || !ref_code || !password) {
-    return showAuthAlert('register-alert', 'Semua field wajib diisi (kecuali No. HP)', 'error');
+  if (!name || !email || !password) {
+    return showAuthAlert('register-alert', 'Nama, email, dan password wajib diisi', 'error');
   }
   if (password.length < 6) {
     return showAuthAlert('register-alert', 'Password minimal 6 karakter', 'error');
@@ -602,8 +623,16 @@ async function doRegister() {
   btn.disabled = true; btn.textContent = 'Loading...';
 
   try {
-    await api('POST', '/affiliate/register', { name, email, phone: phone || undefined, ref_code, password });
-    showAuthAlert('register-alert', 'Pendaftaran berhasil! Akun kamu sedang menunggu approval admin. Silakan login setelah disetujui.', 'success');
+    const body = { name, email, phone: phone || undefined, password };
+    if (ref_code) body.ref_code = ref_code;
+    if (recruitment_token) body.recruitment_token = recruitment_token;
+
+    const data = await api('POST', '/affiliate/register', body);
+    if (data.auto_approved) {
+      showAuthAlert('register-alert', 'Pendaftaran berhasil! Akun langsung aktif. Silakan login.', 'success');
+    } else {
+      showAuthAlert('register-alert', 'Pendaftaran berhasil! Akun kamu sedang menunggu approval admin. Silakan login setelah disetujui.', 'success');
+    }
     document.getElementById('reg-name').value = '';
     document.getElementById('reg-email').value = '';
     document.getElementById('reg-phone').value = '';
@@ -888,6 +917,72 @@ async function confirmWithdraw() {
   }
 }
 
+// ── Recruit Links ───────────────────────────────────────────────
+async function loadRecruitLinks() {
+  const container = document.getElementById('recruit-content');
+  container.innerHTML = '<div class="empty"><span class="spinner"></span> Loading...</div>';
+
+  try {
+    const data = await api('GET', '/affiliate/recruitment-links');
+    if (!data.links.length) {
+      container.innerHTML = '<div class="empty">Belum ada link rekrutmen. Klik "+ Buat Link" untuk membuat.</div>';
+      return;
+    }
+
+    const baseUrl = window.location.origin + '/affiliate/?join=';
+    let html = '<div class="table-wrap"><table><thead><tr><th>Label</th><th>Link</th><th>Digunakan</th><th>Dibuat</th><th>Status</th><th></th></tr></thead><tbody>';
+    for (const link of data.links) {
+      const url = baseUrl + link.token;
+      const isActive = link.is_active;
+      html += '<tr>' +
+        '<td>' + (link.label || '<span style="color:var(--muted)">—</span>') + '</td>' +
+        '<td style="max-width:200px"><div style="display:flex;align-items:center;gap:6px;">' +
+          '<input type="text" value="' + url + '" readonly style="font-size:11px;background:var(--bg2);border:1px solid var(--border);color:var(--cyan);padding:4px 8px;border-radius:4px;width:100%;font-family:JetBrains Mono,monospace;"/>' +
+          '<button class="btn btn-ghost btn-sm" onclick="copyToClipboard(\'' + url + '\', this)" style="flex-shrink:0">📋</button>' +
+        '</div></td>' +
+        '<td class="mono">' + link.used_count + '</td>' +
+        '<td class="mono">' + fmtDate(link.created_at) + '</td>' +
+        '<td>' + (isActive ? '<span class="badge badge-green">Aktif</span>' : '<span class="badge badge-red">Nonaktif</span>') + '</td>' +
+        '<td>' + (isActive ? '<button class="btn btn-ghost btn-sm" onclick="deactivateRecruitLink(' + link.id + ')" style="color:var(--red);font-size:11px">Hapus</button>' : '') + '</td>' +
+      '</tr>';
+    }
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="empty">Gagal memuat: ' + e.message + '</div>';
+  }
+}
+
+async function createRecruitLink() {
+  const label = prompt('Label untuk link ini (opsional, misal: "Instagram", "Telegram"):');
+  try {
+    await api('POST', '/affiliate/recruitment-links', { label: label || undefined });
+    showPageAlert('recruit-alert', 'Link rekrutmen berhasil dibuat!', 'success');
+    loadRecruitLinks();
+  } catch (e) {
+    showPageAlert('recruit-alert', e.message, 'error');
+  }
+}
+
+async function deactivateRecruitLink(id) {
+  if (!confirm('Yakin hapus link ini?')) return;
+  try {
+    await api('DELETE', '/affiliate/recruitment-links/' + id);
+    showPageAlert('recruit-alert', 'Link berhasil dinonaktifkan', 'success');
+    loadRecruitLinks();
+  } catch (e) {
+    showPageAlert('recruit-alert', e.message, 'error');
+  }
+}
+
+function copyToClipboard(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
+}
+
 // ── Payouts ──────────────────────────────────────────────────────
 async function loadPayouts() {
   const tbody = document.getElementById('payouts-table');
@@ -912,17 +1007,42 @@ async function loadPayouts() {
 
 // ── Init ─────────────────────────────────────────────────────────
 (async function init() {
+  // Check for recruitment join token in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const joinToken = urlParams.get('join');
+
   const token = localStorage.getItem('affiliate_token');
-  if (token) {
+  if (token && !joinToken) {
     try {
       await api('GET', '/affiliate/me');
       showScreen('dashboard');
+      return;
     } catch (e) {
-      showScreen('login');
+      // fall through to login
     }
-  } else {
-    showScreen('login');
   }
+
+  if (joinToken) {
+    // Validate the recruitment token and show register screen
+    try {
+      const data = await api('GET', '/affiliate/join/' + joinToken);
+      if (data.valid) {
+        document.getElementById('reg-recruitment-token').value = joinToken;
+        document.getElementById('recruit-info').style.display = 'block';
+        document.getElementById('recruit-info').innerHTML =
+          '🤝 Kamu diundang oleh <strong>' + data.recruiter_name + '</strong>' +
+          (data.label ? ' (' + data.label + ')' : '') +
+          '. Akun kamu akan langsung aktif setelah mendaftar!';
+        document.getElementById('reg-subtitle').textContent = 'Daftar sebagai affiliate — diundang oleh ' + data.recruiter_name;
+        showScreen('register');
+        return;
+      }
+    } catch (e) {
+      console.warn('Invalid join token:', e.message);
+    }
+  }
+
+  showScreen('login');
 })();
 
 // Close modal on overlay click
