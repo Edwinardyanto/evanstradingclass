@@ -374,6 +374,15 @@ input:focus, select:focus { border-color: var(--cyan2); }
         Contoh: <code id="ref-example">mahiralgo|CODE</code>
       </div>
     </div>
+
+    <!-- DOWNLINE TREE -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Downline Kamu</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadDownline()">↻ Refresh</button>
+      </div>
+      <div id="downline-content"><div class="empty"><span class="spinner"></span> Loading...</div></div>
+    </div>
   </div>
 
   <!-- COMMISSIONS -->
@@ -421,15 +430,28 @@ input:focus, select:focus { border-color: var(--cyan2); }
   <div class="page" id="page-recruit">
     <div class="section">
       <div class="section-header">
-        <div class="section-title">Link Rekrutmen</div>
+        <div class="section-title">Rekrut Affiliate</div>
         <button class="btn btn-primary btn-sm" onclick="createRecruitLink()">+ Buat Link</button>
       </div>
       <div class="alert" id="recruit-alert"></div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7;">
-        Buat link rekrutmen untuk mengajak orang bergabung sebagai affiliate di bawah kamu (downline).<br/>
-        Mereka akan otomatis terdaftar dan kamu mendapatkan komisi upline dari setiap penjualan mereka.
-      </p>
-      <div id="recruit-content"><div class="empty">Loading...</div></div>
+
+      <!-- Commission info card -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:12px;">Info Komisi Rekrutmen</div>
+        <div id="recruit-commission-info" style="font-size:13px;color:var(--muted);line-height:1.8;">Loading...</div>
+      </div>
+
+      <!-- Recruitment links table -->
+      <div id="recruit-content"><div class="empty"><span class="spinner"></span> Loading...</div></div>
+    </div>
+
+    <!-- Downline tree -->
+    <div class="section" style="margin-top:32px;">
+      <div class="section-header">
+        <div class="section-title">Struktur Downline</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadDownline()">↻ Refresh</button>
+      </div>
+      <div id="recruit-downline-content"><div class="empty"><span class="spinner"></span> Loading...</div></div>
     </div>
   </div>
 
@@ -577,7 +599,7 @@ function showPage(name) {
 
   if (name === 'commissions') loadCommissions();
   if (name === 'referrals') loadReferrals();
-  if (name === 'recruit') loadRecruitLinks();
+  if (name === 'recruit') { loadRecruitLinks(); loadDownline(); updateRecruitInfoCard(JSON.parse(localStorage.getItem('affiliate_data') || '{}')); }
   if (name === 'withdraw') loadWithdrawable();
   if (name === 'payouts') loadPayouts();
 }
@@ -692,6 +714,8 @@ async function loadDashboard() {
     localStorage.setItem('affiliate_data', JSON.stringify(aff));
     document.getElementById('nav-user').textContent = aff.name;
     document.getElementById('nav-ref').textContent = aff.ref_code;
+    updateRecruitInfoCard(aff);
+    loadDownline();
 
     document.getElementById('stat-total-earned').textContent = fmtRp(s.total_earned);
     document.getElementById('stat-pending').textContent = fmtRp(s.pending_amount);
@@ -1003,6 +1027,114 @@ async function loadPayouts() {
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="4" class="empty">Gagal memuat: ' + e.message + '</td></tr>';
   }
+}
+
+// ── Downline Tree ────────────────────────────────────────────────
+async function loadDownline() {
+  const targets = ['downline-content', 'recruit-downline-content'];
+  targets.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<div class="empty"><span class="spinner"></span> Loading...</div>';
+  });
+
+  try {
+    const data = await api('GET', '/affiliate/downline');
+    const html = renderDownlineTree(data.downlines);
+    targets.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    });
+  } catch (e) {
+    const html = '<div class="empty">Gagal memuat: ' + e.message + '</div>';
+    targets.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    });
+  }
+}
+
+function renderDownlineTree(downlines) {
+  if (!downlines || !downlines.length) {
+    return '<div class="empty">Belum ada downline. Buat link rekrutmen dan bagikan!</div>';
+  }
+
+  let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
+
+  for (const d of downlines) {
+    const sc = d.status === 'active' ? 'var(--green)' : d.status === 'pending' ? 'var(--gold)' : 'var(--red)';
+    const statusLabel = d.status === 'active' ? 'Aktif' : d.status === 'pending' ? 'Pending' : 'Suspended';
+
+    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;">';
+
+    // Level 1 row
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">';
+    html += '<div style="display:flex;align-items:center;gap:12px;">';
+    html += '<div style="width:10px;height:10px;border-radius:50%;background:' + sc + ';flex-shrink:0;box-shadow:0 0 6px ' + sc + '40;"></div>';
+    html += '<div>';
+    html += '<div style="font-weight:600;font-size:14px;">' + d.name + '</div>';
+    html += '<div style="font-size:11px;color:var(--muted);font-family:\'JetBrains Mono\',monospace;margin-top:2px;">' +
+      d.ref_code + ' · ' + d.commission_value + '% komisi · ' +
+      '<span style="color:' + sc + '">' + statusLabel + '</span></div>';
+    html += '</div></div>';
+
+    // Stats right side
+    html += '<div style="display:flex;gap:20px;text-align:right;flex-wrap:wrap;">';
+    html += '<div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Referral</div>' +
+      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:var(--cyan);">' + (d.total_referrals || 0) + '</div></div>';
+    html += '<div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Bergabung</div>' +
+      '<div style="font-size:12px;font-family:\'JetBrains Mono\',monospace;">' + fmtDate(d.created_at) + '</div></div>';
+    html += '</div></div>';
+
+    // Level 2 sub-downlines
+    if (d.sub_downlines && d.sub_downlines.length) {
+      html += '<div style="margin-top:12px;padding-left:20px;border-left:2px solid var(--border);display:flex;flex-direction:column;gap:6px;">';
+      for (const s of d.sub_downlines) {
+        const sc2 = s.status === 'active' ? 'var(--green)' : s.status === 'pending' ? 'var(--gold)' : 'var(--red)';
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--card2);border-radius:8px;">';
+        html += '<div style="width:6px;height:6px;border-radius:50%;background:' + sc2 + ';flex-shrink:0;"></div>';
+        html += '<div style="flex:1;">';
+        html += '<span style="font-size:13px;font-weight:500;">' + s.name + '</span>';
+        html += '<span style="font-size:11px;color:var(--muted);font-family:\'JetBrains Mono\',monospace;margin-left:8px;">' +
+          s.ref_code + ' · ' + s.commission_value + '%</span>';
+        html += '</div>';
+        html += '<div style="font-size:11px;color:var(--muted);font-family:\'JetBrains Mono\',monospace;">' + fmtDate(s.created_at) + '</div>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// ── Recruit Commission Info Card ──────────────────────────────────
+function updateRecruitInfoCard(affiliate) {
+  const el = document.getElementById('recruit-commission-info');
+  if (!el || !affiliate) return;
+
+  const myComm = parseFloat(affiliate.commission_value || 0);
+  const maxGiveaway = myComm - 10;
+  const minGiveaway = 10;
+
+  if (maxGiveaway < minGiveaway) {
+    el.innerHTML =
+      'Komisi kamu saat ini: <strong style="color:var(--cyan);">' + myComm + '%</strong><br/>' +
+      '<span style="color:var(--red);">Komisi kamu terlalu kecil untuk merekrut downline. ' +
+      'Minimum komisi yang harus kamu miliki adalah 20% (sehingga bisa memberikan 10% ke downline).</span>';
+    return;
+  }
+
+  el.innerHTML =
+    'Komisi kamu: <strong style="color:var(--cyan);">' + myComm + '%</strong><br/>' +
+    'Range komisi yang bisa kamu berikan ke downline: <strong style="color:var(--green);">' +
+    minGiveaway + '% – ' + maxGiveaway + '%</strong><br/>' +
+    'Spread komisi yang kamu dapat: <strong style="color:var(--white);">' +
+    (myComm - maxGiveaway) + '% – ' + (myComm - minGiveaway) + '%</strong><br/>' +
+    '<span style="color:var(--muted);font-size:12px;">Kamu harus menyisakan minimal 10% untuk dirimu sendiri. ' +
+    'Link rekrutmen bersifat permanen dan bisa digunakan berkali-kali.</span>';
 }
 
 // ── Init ─────────────────────────────────────────────────────────
