@@ -635,7 +635,10 @@ async function loadDashboard() {
           <td><strong>${t.tv_username}</strong></td>
           <td style="font-size:12px;color:var(--muted)">${t.product_name || '—'}</td>
           <td>${statusBadge(t.tv_access_status)}</td>
-          <td><button class="btn btn-ghost btn-sm" onclick="retry('${t.scalev_order_id}')">↻ Retry</button></td>
+          <td style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm" onclick="retry('${t.scalev_order_id}')">↻ Retry</button>
+            <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${t.scalev_order_id}', '${t.tv_username}')" style="color:var(--cyan)">✎ Edit</button>
+          </td>
         </tr>`).join('')
       : '<tr><td colspan="5" class="empty">✅ Tidak ada failed order</td></tr>';
 
@@ -780,7 +783,10 @@ async function loadTransactions() {
           <td class="mono" style="font-size:12px">${t.is_lifetime ? '<span style="color:var(--gold)">Lifetime</span>' : (t.expires_at ? fmtDate(t.expires_at) : '—')}</td>
           <td>${statusBadge(t.tv_access_status)}</td>
           <td>${['failed','failed_no_username','failed_unknown_product','processing'].includes(t.tv_access_status)
-            ? `<button class="btn btn-ghost btn-sm" onclick="retry('${t.scalev_order_id}')">↻ Retry</button>`
+            ? `<div style="display:flex;gap:6px;">
+                <button class="btn btn-ghost btn-sm" onclick="retry('${t.scalev_order_id}')">↻ Retry</button>
+                <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${t.scalev_order_id}', '${t.tv_username}')" style="color:var(--cyan)">✎ Edit</button>
+               </div>`
             : ''}</td>
         </tr>`).join('')
       : '<tr><td colspan="7" class="empty">Belum ada transaksi</td></tr>';
@@ -1095,6 +1101,83 @@ document.getElementById('product-modal').addEventListener('click', function(e) {
 document.getElementById('affiliate-modal').addEventListener('click', function(e) {
   if (e.target === this) closeAffiliateModal();
 });
+document.getElementById('edit-username-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeEditUsernameModal();
+});
+
+// ── Edit TV Username & Retry ──────────────────────────────────────
+let currentEditOrderId = null;
+
+function openEditUsernameModal(orderId, currentUsername) {
+  currentEditOrderId = orderId;
+  document.getElementById('edit-username-order-label').textContent = 'Order: ' + orderId;
+  document.getElementById('edit-username-input').value = currentUsername || '';
+  document.getElementById('edit-username-error').classList.remove('show');
+  document.getElementById('edit-username-modal').classList.add('open');
+  setTimeout(() => document.getElementById('edit-username-input').focus(), 100);
+}
+
+function closeEditUsernameModal() {
+  document.getElementById('edit-username-modal').classList.remove('open');
+  currentEditOrderId = null;
+}
+
+async function saveAndRetry() {
+  if (!currentEditOrderId) return;
+  const username = document.getElementById('edit-username-input').value.trim();
+  if (!username) {
+    const el = document.getElementById('edit-username-error');
+    el.textContent = 'TV Username wajib diisi';
+    el.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('save-retry-btn');
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+  document.getElementById('edit-username-error').classList.remove('show');
+
+  try {
+    await api('POST', `/admin/transactions/${currentEditOrderId}/edit-and-retry`, {
+      tv_username: username
+    });
+    closeEditUsernameModal();
+    showAlert('grant', `✅ Grant berhasil untuk ${username}`, 'success');
+    loadDashboard();
+    loadTransactions();
+  } catch(e) {
+    const el = document.getElementById('edit-username-error');
+    el.textContent = e.message;
+    el.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan & Retry Grant';
+  }
+}
 </script>
+
+<!-- MODAL: Edit TV Username -->
+<div class="modal-overlay" id="edit-username-modal">
+  <div class="modal" style="width:440px;">
+    <h3>EDIT TV USERNAME</h3>
+    <p id="edit-username-order-label" style="font-family:'JetBrains Mono',monospace;font-size:12px;margin-bottom:16px;"></p>
+    <div class="form-group">
+      <label>TV Username Baru</label>
+      <input type="text" id="edit-username-input" placeholder="contoh: mahiralgo"
+        onkeydown="if(event.key==='Enter') saveAndRetry()"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">
+        Pastikan username TradingView benar — bukan email, bukan nama lengkap.
+      </div>
+    </div>
+    <div class="alert alert-error" id="edit-username-error" style="margin-top:8px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEditUsernameModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveAndRetry()" id="save-retry-btn">
+        Simpan & Retry Grant
+      </button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
