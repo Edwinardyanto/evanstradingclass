@@ -208,6 +208,7 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     <div class="nav-tab" onclick="showPage('subscribers')">Subscribers</div>
     <div class="nav-tab" onclick="showPage('transactions')">Transaksi</div>
     <div class="nav-tab" onclick="showPage('grant')">Manual Grant</div>
+    <div class="nav-tab" onclick="showPage('affiliates')">Affiliates</div>
   </div>
   <div class="nav-right">
     <span id="auth-status">not connected</span>
@@ -347,6 +348,45 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     </div>
   </div>
 
+  <!-- AFFILIATES -->
+  <div class="page" id="page-affiliates">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Affiliate Members</div>
+        <div style="display:flex;gap:8px">
+          <select id="aff-status-filter" onchange="loadAffiliates()" style="font-size:12px;padding:6px 10px">
+            <option value="">Semua</option>
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="loadAffiliates()">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="alert-affiliates" class="alert"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Email</th>
+              <th>Ref Code</th>
+              <th>Komisi</th>
+              <th>Referral</th>
+              <th>Earned</th>
+              <th>Pending</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="affiliates-table">
+            <tr><td colspan="9" class="empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- MODAL: Add/Edit Product -->
@@ -370,6 +410,48 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeProductModal()">Batal</button>
       <button class="btn btn-primary" onclick="saveProduct()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Affiliate Detail -->
+<div class="modal-overlay" id="affiliate-modal">
+  <div class="modal" style="width:560px">
+    <h3 id="aff-modal-name">AFFILIATE DETAIL</h3>
+    <p id="aff-modal-email" style="margin-bottom:8px"></p>
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <span id="aff-modal-refcode" class="badge badge-cyan"></span>
+      <span id="aff-modal-commission" class="badge badge-muted"></span>
+      <span id="aff-modal-status-badge"></span>
+    </div>
+
+    <div class="form-row cols-3" style="margin-bottom:20px">
+      <div class="stat-card" style="padding:14px 16px">
+        <div class="stat-label">Total Earned</div>
+        <div class="stat-value" id="aff-stat-earned" style="font-size:20px">—</div>
+      </div>
+      <div class="stat-card" style="padding:14px 16px">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" id="aff-stat-pending" style="font-size:20px;color:var(--gold)">—</div>
+      </div>
+      <div class="stat-card" style="padding:14px 16px">
+        <div class="stat-label">Referrals</div>
+        <div class="stat-value" id="aff-stat-referrals" style="font-size:20px">—</div>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px">KOMISI TERBARU</div>
+    <div class="table-wrap" style="margin-bottom:20px;max-height:200px;overflow-y:auto">
+      <table>
+        <thead><tr><th>Tanggal</th><th>TV User</th><th>Komisi</th><th>Status</th></tr></thead>
+        <tbody id="aff-modal-commissions"><tr><td colspan="4" class="empty">—</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAffiliateModal()">Tutup</button>
+      <button class="btn btn-danger btn-sm" id="aff-suspend-btn" onclick="suspendAffiliate()">Suspend</button>
+      <button class="btn btn-primary" id="aff-approve-btn" onclick="approveAffiliate()">✓ Approve</button>
     </div>
   </div>
 </div>
@@ -438,11 +520,12 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  const tabs = { dashboard:0, products:1, subscribers:2, transactions:3, grant:4 };
+  const tabs = { dashboard:0, products:1, subscribers:2, transactions:3, grant:4, affiliates:5 };
   document.querySelectorAll('.nav-tab')[tabs[name]]?.classList.add('active');
   if (name === 'products')     loadProducts();
   if (name === 'subscribers')  loadSubscribers();
   if (name === 'transactions') loadTransactions();
+  if (name === 'affiliates')   loadAffiliates();
 }
 
 function loadAll() {
@@ -688,6 +771,121 @@ function showAlert(page, msg, type) {
 // Close modal on overlay click
 document.getElementById('product-modal').addEventListener('click', function(e) {
   if (e.target === this) closeProductModal();
+});
+
+// ── Affiliates ────────────────────────────────────────────────────
+let currentAffiliateId = null;
+
+async function loadAffiliates() {
+  const status = document.getElementById('aff-status-filter').value;
+  const url = '/admin/affiliates' + (status ? `?status=${status}` : '');
+  try {
+    const { affiliates } = await api('GET', url);
+    document.getElementById('affiliates-table').innerHTML = affiliates.length
+      ? affiliates.map(a => `<tr>
+          <td><strong>${a.name}</strong></td>
+          <td style="font-size:12px;color:var(--muted)">${a.email}</td>
+          <td><span class="badge badge-cyan mono">${a.ref_code}</span></td>
+          <td style="font-size:12px">${a.commission_type === 'percent' ? a.commission_value + '%' : 'Rp ' + parseInt(a.commission_value).toLocaleString('id-ID')}</td>
+          <td class="mono">${a.total_referrals || 0}</td>
+          <td class="mono" style="font-size:12px">Rp ${parseInt(a.total_earned || 0).toLocaleString('id-ID')}</td>
+          <td class="mono" style="font-size:12px;color:var(--gold)">Rp ${parseInt(a.pending_amount || 0).toLocaleString('id-ID')}</td>
+          <td>${affiliateStatusBadge(a.status)}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="openAffiliateModal(${a.id})">Detail</button></td>
+        </tr>`).join('')
+      : '<tr><td colspan="9" class="empty">Tidak ada affiliate</td></tr>';
+  } catch(e) { showAlert('affiliates', e.message, 'error'); }
+}
+
+async function openAffiliateModal(id) {
+  currentAffiliateId = id;
+  document.getElementById('affiliate-modal').classList.add('open');
+  document.getElementById('aff-modal-commissions').innerHTML = '<tr><td colspan="4" class="empty">Loading...</td></tr>';
+
+  try {
+    const { affiliate: a, commissions } = await api('GET', `/admin/affiliates/${id}`);
+
+    document.getElementById('aff-modal-name').textContent = a.name.toUpperCase();
+    document.getElementById('aff-modal-email').textContent = a.email + (a.phone ? ' · ' + a.phone : '');
+    document.getElementById('aff-modal-refcode').textContent = a.ref_code;
+    document.getElementById('aff-modal-commission').textContent =
+      a.commission_type === 'percent' ? `Komisi ${a.commission_value}%` : `Flat Rp ${parseInt(a.commission_value).toLocaleString('id-ID')}`;
+    document.getElementById('aff-modal-status-badge').innerHTML = affiliateStatusBadge(a.status);
+
+    document.getElementById('aff-stat-earned').textContent = 'Rp ' + parseInt(a.total_earned || 0).toLocaleString('id-ID');
+    document.getElementById('aff-stat-pending').textContent = 'Rp ' + parseInt(a.pending_amount || 0).toLocaleString('id-ID');
+    document.getElementById('aff-stat-referrals').textContent = a.total_referrals || 0;
+
+    // Show/hide buttons based on status
+    document.getElementById('aff-approve-btn').style.display = a.status === 'active' ? 'none' : 'inline-flex';
+    document.getElementById('aff-suspend-btn').style.display = a.status === 'suspended' ? 'none' : 'inline-flex';
+
+    // Recent commissions
+    document.getElementById('aff-modal-commissions').innerHTML = commissions.length
+      ? commissions.slice(0, 10).map(c => `<tr>
+          <td style="font-size:12px">${fmtDate(c.created_at)}</td>
+          <td style="font-size:12px">${c.tv_username}</td>
+          <td class="mono" style="font-size:12px">Rp ${parseInt(c.commission_amount).toLocaleString('id-ID')}</td>
+          <td>${commissionStatusBadge(c.status)}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" class="empty">Belum ada komisi</td></tr>';
+
+  } catch(e) {
+    showAlert('affiliates', e.message, 'error');
+    closeAffiliateModal();
+  }
+}
+
+function closeAffiliateModal() {
+  document.getElementById('affiliate-modal').classList.remove('open');
+  currentAffiliateId = null;
+}
+
+async function approveAffiliate() {
+  if (!currentAffiliateId) return;
+  if (!confirm('Approve affiliate ini?')) return;
+  try {
+    await api('PUT', `/admin/affiliates/${currentAffiliateId}/approve`);
+    closeAffiliateModal();
+    loadAffiliates();
+    showAlert('affiliates', '✅ Affiliate diapprove', 'success');
+  } catch(e) { alert('❌ ' + e.message); }
+}
+
+async function suspendAffiliate() {
+  if (!currentAffiliateId) return;
+  if (!confirm('Suspend affiliate ini? Mereka tidak bisa login lagi.')) return;
+  try {
+    await api('DELETE', `/admin/affiliates/${currentAffiliateId}`);
+    closeAffiliateModal();
+    loadAffiliates();
+    showAlert('affiliates', 'Affiliate disuspend', 'success');
+  } catch(e) { alert('❌ ' + e.message); }
+}
+
+function affiliateStatusBadge(status) {
+  const map = {
+    pending:   '<span class="badge badge-yellow">pending</span>',
+    active:    '<span class="badge badge-green">active</span>',
+    suspended: '<span class="badge badge-red">suspended</span>',
+  };
+  return map[status] || `<span class="badge badge-muted">${status}</span>`;
+}
+
+function commissionStatusBadge(status) {
+  const map = {
+    pending:              '<span class="badge badge-muted">pending</span>',
+    available:            '<span class="badge badge-green">available</span>',
+    withdrawal_requested: '<span class="badge badge-yellow">diproses</span>',
+    paid:                 '<span class="badge badge-cyan">paid</span>',
+    rejected:             '<span class="badge badge-red">rejected</span>',
+  };
+  return map[status] || `<span class="badge badge-muted">${status}</span>`;
+}
+
+// Close affiliate modal on overlay click
+document.getElementById('affiliate-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAffiliateModal();
 });
 </script>
 </body>
