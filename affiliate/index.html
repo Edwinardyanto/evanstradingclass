@@ -1215,57 +1215,83 @@ function renderCreateLinkForm(affiliate) {
   if (!container) return;
 
   if (maxComm < 20) {
-    container.innerHTML = '<div style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.15);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--red);margin-bottom:24px;">' +
+    container.innerHTML =
+      '<div style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.15);border-radius:10px;' +
+      'padding:14px 18px;font-size:13px;color:var(--red);margin-bottom:24px;">' +
       'Komisi kamu (' + maxComm + '%) terlalu kecil untuk membuat link rekrutmen. ' +
-      'Minimum max komisi adalah 20% (10% untuk kamu, 10% untuk downline). Hubungi admin untuk upgrade komisi.' +
-      '</div>';
+      'Minimum max komisi adalah 20%. Hubungi admin untuk upgrade komisi.</div>';
     return;
   }
 
   const minGive = 10;
   const maxGive = maxComm - 10;
   const steps = Math.floor(maxGive / 10);
-  const defaultStep = 1;
 
-  let dotsHtml = '';
+  // Build dots as a simple flex row — NOT overlaid on track
+  let dotsHtml = '<div style="display:flex;justify-content:space-between;padding:4px 0;margin-top:2px;">';
   for (let i = 1; i <= steps; i++) {
-    dotsHtml += '<div id="rldot-' + i + '" style="width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .15s;flex-shrink:0;"></div>';
+    dotsHtml += '<div id="rldot-' + i + '" style="width:6px;height:6px;border-radius:50%;' +
+      'background:var(--border);transition:all .15s;"></div>';
   }
+  dotsHtml += '</div>';
 
   container.innerHTML =
     '<style>' +
-    '#new-link-commission { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; border-radius: 1px; outline: none; cursor: pointer; background: linear-gradient(to right, var(--cyan2) 0%, var(--cyan2) ' + Math.round(100/steps) + '%, var(--border) ' + Math.round(100/steps) + '%, var(--border) 100%); }' +
-    '#new-link-commission::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--cyan); cursor: pointer; border: 2px solid var(--bg2); }' +
-    '#new-link-commission::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--cyan); cursor: pointer; border: 2px solid var(--bg2); }' +
+    '#new-link-commission {' +
+      '-webkit-appearance:none;appearance:none;' +
+      'width:100%;height:3px;border-radius:2px;' +
+      'outline:none;cursor:pointer;' +
+      'background:linear-gradient(to right,var(--cyan2) 0%,var(--cyan2) ' + Math.round(100/steps) + '%,var(--border) ' + Math.round(100/steps) + '%,var(--border) 100%);' +
+      'margin:0;padding:0;display:block;' +
+    '}' +
+    '#new-link-commission::-webkit-slider-thumb {' +
+      '-webkit-appearance:none;appearance:none;' +
+      'width:14px;height:14px;border-radius:50%;' +
+      'background:var(--cyan);cursor:pointer;' +
+      'border:2px solid var(--bg2);' +
+      'margin-top:0;' +
+    '}' +
+    '#new-link-commission::-moz-range-thumb {' +
+      'width:14px;height:14px;border-radius:50%;' +
+      'background:var(--cyan);cursor:pointer;' +
+      'border:2px solid var(--bg2);' +
+    '}' +
     '</style>' +
 
     '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:24px;">' +
-      '<div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:\'JetBrains Mono\',monospace;margin-bottom:16px;">Buat Link Rekrutmen Baru</div>' +
+      '<div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;' +
+        'font-family:\'JetBrains Mono\',monospace;margin-bottom:16px;">Buat Link Rekrutmen Baru</div>' +
 
-      '<div style="display:grid;grid-template-columns:1fr 1.6fr auto;gap:20px;align-items:start;">' +
+      '<div style="display:grid;grid-template-columns:1fr 1.8fr auto;gap:20px;align-items:start;">' +
 
+        // Col 1: Label
         '<div>' +
-          '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Label <span style="color:var(--red)">*</span></label>' +
+          '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">' +
+            'Label <span style="color:var(--red)">*</span></label>' +
           '<input type="text" id="new-link-label" placeholder="mis: Instagram, Telegram" ' +
-            'style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;font-family:\'DM Sans\',sans-serif;outline:none;" ' +
+            'style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;' +
+            'padding:9px 12px;color:var(--white);font-size:13px;font-family:\'DM Sans\',sans-serif;outline:none;" ' +
             'onfocus="this.style.borderColor=\'var(--cyan2)\'" onblur="this.style.borderColor=\'var(--border)\'"/>' +
         '</div>' +
 
+        // Col 2: Slider
         '<div>' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-            '<label style="font-size:11px;color:var(--muted);">Komisi untuk downline <span style="color:var(--red)">*</span></label>' +
-            '<span style="font-size:14px;font-weight:700;color:var(--cyan);font-family:\'JetBrains Mono\',monospace;" id="rl-commission-display">' + minGive + '%</span>' +
+            '<label style="font-size:11px;color:var(--muted);">' +
+              'Komisi untuk downline <span style="color:var(--red)">*</span></label>' +
+            '<span id="rl-commission-display" ' +
+              'style="font-size:14px;font-weight:700;color:var(--cyan);font-family:\'JetBrains Mono\',monospace;">' +
+              minGive + '%</span>' +
           '</div>' +
 
-          '<div style="position:relative;">' +
-            '<input type="range" id="new-link-commission" min="1" max="' + steps + '" step="1" value="' + defaultStep + '" ' +
-              'oninput="updateRecruitSlider(' + maxComm + ')"/>' +
-            '<div style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;display:flex;justify-content:space-between;pointer-events:none;padding:0 8px;">' +
-              dotsHtml +
-            '</div>' +
-          '</div>' +
+          // Track only — no relative wrapper needed
+          '<input type="range" id="new-link-commission" min="1" max="' + steps + '" step="1" value="1" ' +
+            'oninput="updateRecruitSlider(' + maxComm + ')"/>' +
 
-          '<div style="display:flex;justify-content:space-between;margin-top:6px;">' +
+          // Dots row — separate from track, not overlaid
+          dotsHtml +
+
+          '<div style="display:flex;justify-content:space-between;margin-top:4px;">' +
             '<span style="font-size:10px;color:var(--muted);">' + minGive + '%</span>' +
             '<span style="font-size:10px;color:var(--muted);">' + maxGive + '%</span>' +
           '</div>' +
@@ -1276,8 +1302,10 @@ function renderCreateLinkForm(affiliate) {
           '</div>' +
         '</div>' +
 
+        // Col 3: Button aligned with input height
         '<div style="padding-top:17px;">' +
-          '<button class="btn btn-primary" onclick="createRecruitLink()" style="height:38px;white-space:nowrap;width:100%;">+ Buat Link</button>' +
+          '<button class="btn btn-primary" onclick="createRecruitLink()" ' +
+            'style="height:38px;white-space:nowrap;width:100%;">+ Buat Link</button>' +
         '</div>' +
 
       '</div>' +
@@ -1294,28 +1322,29 @@ function updateRecruitSlider(maxComm) {
   const steps = parseInt(slider.max);
   const give = val * 10;
   const spread = maxComm - give;
+  const fillPct = Math.round((val / steps) * 100);
 
   document.getElementById('rl-commission-display').textContent = give + '%';
   document.getElementById('rl-spread-display').textContent = spread + '%';
   document.getElementById('rl-downline-display').textContent = give + '%';
 
-  // Update track fill via CSS gradient — no offset issues
-  const fillPct = Math.round((val / steps) * 100);
-  slider.style.background = 'linear-gradient(to right, var(--cyan2) 0%, var(--cyan2) ' + fillPct + '%, var(--border) ' + fillPct + '%, var(--border) 100%)';
+  // Update track fill via CSS gradient directly on input
+  slider.style.background =
+    'linear-gradient(to right, var(--cyan2) 0%, var(--cyan2) ' + fillPct +
+    '%, var(--border) ' + fillPct + '%, var(--border) 100%)';
 
-  // Update dots
+  // Update dots — below the track, not overlaid
   for (let i = 1; i <= steps; i++) {
     const dot = document.getElementById('rldot-' + i);
-    if (dot) {
-      if (i <= val) {
-        dot.style.background = 'var(--cyan)';
-        dot.style.width = '8px';
-        dot.style.height = '8px';
-      } else {
-        dot.style.background = 'var(--border)';
-        dot.style.width = '6px';
-        dot.style.height = '6px';
-      }
+    if (!dot) continue;
+    if (i <= val) {
+      dot.style.background = 'var(--cyan)';
+      dot.style.width = '8px';
+      dot.style.height = '8px';
+    } else {
+      dot.style.background = 'var(--border)';
+      dot.style.width = '6px';
+      dot.style.height = '6px';
     }
   }
 }
