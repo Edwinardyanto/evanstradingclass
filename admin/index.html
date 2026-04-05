@@ -477,12 +477,12 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     <!-- Set Master / Edit Commission section -->
     <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
       <div style="font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:12px;">Set Tipe & Komisi</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
         <div class="form-group" style="margin-bottom:0">
           <label>Tipe Affiliate</label>
           <select id="aff-edit-type" style="font-size:12px;padding:7px 10px;">
-            <option value="affiliate">Affiliate</option>
-            <option value="master_affiliate">Master Affiliate</option>
+            <option value="affiliate">Affiliate (max 30%)</option>
+            <option value="master_affiliate">Master Affiliate (max 50%)</option>
           </select>
         </div>
         <div class="form-group" style="margin-bottom:0">
@@ -490,11 +490,9 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
           <input type="number" id="aff-edit-max-commission" min="10" max="100" step="1"
             style="font-size:12px;padding:7px 10px;" placeholder="mis: 30"/>
         </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label>Komisi Aktif (%)</label>
-          <input type="number" id="aff-edit-commission" min="10" max="100" step="1"
-            style="font-size:12px;padding:7px 10px;" placeholder="mis: 20"/>
-        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.6;">
+        Komisi aktif otomatis mengikuti Max Komisi. Affiliate mendapat komisi penuh saat buyer pakai link mereka langsung, dan mendapat spread saat buyer pakai link downline mereka.
       </div>
       <button class="btn btn-primary btn-sm" onclick="saveMasterSetting()">Simpan Perubahan</button>
     </div>
@@ -872,8 +870,7 @@ async function loadAffiliates() {
             ? '<span class="badge" style="background:rgba(245,200,66,.15);color:var(--gold)">Master</span>'
             : '<span class="badge badge-muted">Affiliate</span>'}</td>
           <td style="font-size:12px">
-            ${a.commission_value}%
-            ${a.max_commission ? '<span style="color:var(--muted)"> / max ' + a.max_commission + '%</span>' : ''}
+            ${a.max_commission || a.commission_value}%
           </td>
           <td style="font-size:12px;color:var(--muted)">
             ${a.upline_id
@@ -927,7 +924,7 @@ function renderAdminTree(nodes, depth) {
     html += `<div style="font-weight:600;font-size:13px;">${n.name}`;
     if (isMaster) html += ' <span style="font-size:10px;color:var(--gold);font-family:JetBrains Mono,monospace;">MASTER</span>';
     html += '</div>';
-    html += `<div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${n.ref_code} · ${n.commission_value}%${n.max_commission ? ' (max ' + n.max_commission + '%)' : ''}</div>`;
+    html += `<div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${n.ref_code} · ${n.max_commission || n.commission_value}%</div>`;
     html += '</div></div>';
 
     html += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
@@ -963,7 +960,7 @@ async function openAffiliateModal(id) {
       a.email + (a.phone ? ' · ' + a.phone : '') + ' · Bergabung ' + fmtDate(a.created_at);
     document.getElementById('aff-modal-refcode').textContent = a.ref_code;
     document.getElementById('aff-modal-commission').textContent =
-      `Komisi ${a.commission_value}%${a.max_commission ? ' / max ' + a.max_commission + '%' : ''}`;
+      `Komisi ${a.max_commission || a.commission_value}%`;
 
     document.getElementById('aff-modal-type-badge').innerHTML = a.affiliate_type === 'master_affiliate'
       ? '<span class="badge" style="background:rgba(245,200,66,.15);color:var(--gold);">Master Affiliate</span>'
@@ -998,8 +995,7 @@ async function openAffiliateModal(id) {
 
     // Pre-fill edit fields
     document.getElementById('aff-edit-type').value = a.affiliate_type || 'affiliate';
-    document.getElementById('aff-edit-max-commission').value = a.max_commission || '';
-    document.getElementById('aff-edit-commission').value = a.commission_value || '';
+    document.getElementById('aff-edit-max-commission').value = a.max_commission || a.commission_value || '';
 
     // Show/hide approve/suspend
     document.getElementById('aff-approve-btn').style.display = a.status === 'active' ? 'none' : 'inline-flex';
@@ -1032,17 +1028,15 @@ async function saveMasterSetting() {
   if (!currentAffiliateId) return;
   const affiliate_type = document.getElementById('aff-edit-type').value;
   const max_commission = document.getElementById('aff-edit-max-commission').value;
-  const commission_value = document.getElementById('aff-edit-commission').value;
 
   if (!max_commission) return alert('Max komisi wajib diisi');
 
   try {
     await api('PUT', `/admin/affiliates/${currentAffiliateId}/set-master`, {
       affiliate_type,
-      max_commission: parseFloat(max_commission),
-      commission_value: commission_value ? parseFloat(commission_value) : undefined
+      max_commission: parseFloat(max_commission)
     });
-    showAlert('affiliates', `Setting disimpan untuk affiliate #${currentAffiliateId}`, 'success');
+    showAlert('affiliates', `Setting disimpan — komisi ${max_commission}%`, 'success');
     openAffiliateModal(currentAffiliateId);
     loadAffiliates();
   } catch(e) { alert(e.message); }
