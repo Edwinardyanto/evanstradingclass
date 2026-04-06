@@ -1199,7 +1199,25 @@ async function loadShareableLinks(refCode) {
       return;
     }
 
-    container.innerHTML = data.products.map(p => {
+    const homepageLink = 'https://evanstradingclass.com/?ref=' + encodeURIComponent(refCode);
+    const safeHomepageLink = homepageLink.replace(/'/g, "\\'");
+
+    const homepageLinkHtml = `
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--cyan);font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">
+          Link Utama (Homepage)
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <code style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--cyan);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${homepageLink}</code>
+          <button class="ref-copy-btn" onclick="copyShareLink('${safeHomepageLink}', this)"
+            style="flex-shrink:0;white-space:nowrap;font-size:12px;">
+            📋 Copy
+          </button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">Bagikan link ini — ref code otomatis terbawa ke semua produk saat checkout.</div>
+      </div>`;
+
+    const productLinksHtml = data.products.map(p => {
       const url = p.checkout_url + '?ref=' + refCode;
       const label = p.months ? p.months + ' Bulan' : 'Lifetime';
       const safeUrl = url.replace(/'/g, "\\'");
@@ -1220,6 +1238,8 @@ async function loadShareableLinks(refCode) {
           </div>
         </div>`;
     }).join('');
+
+    container.innerHTML = homepageLinkHtml + productLinksHtml;
 
   } catch(e) {
     container.innerHTML = '<div style="font-size:12px;color:var(--muted);">Gagal memuat link.</div>';

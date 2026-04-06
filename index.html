@@ -748,7 +748,7 @@ footer{border-top:1px solid var(--border);padding:36px 48px;display:flex;align-i
           <div class="pc-feat"><svg class="chk-c" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#18B0C0" stroke-width="1"/><path d="M4 7l2 2 4-4" stroke="#18B0C0" stroke-width="1.3" stroke-linecap="round"/></svg>MTF Levels PDH/PDL/PWH/PWL</div>
           <div class="pc-feat dim"><svg class="chk-x" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 4l6 6M10 4l-6 6" stroke="#1A3040" stroke-width="1.3" stroke-linecap="round"/></svg>Update fitur baru</div>
         </div>
-        <button class="pc-btn" onclick="window.location.href='checkout-basic.html'">Mulai 1 Bulan →</button>
+        <button class="pc-btn" onclick="window.location.href=getCheckoutUrl('checkout-basic.html')">Mulai 1 Bulan →</button>
       </div>
 
       <!-- SILVER -->
@@ -768,7 +768,7 @@ footer{border-top:1px solid var(--border);padding:36px 48px;display:flex;align-i
           <div class="pc-feat"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#00C8D7" stroke-width="1"/><path d="M4 7l2 2 4-4" stroke="#00C8D7" stroke-width="1.3" stroke-linecap="round"/></svg>MTF Levels PDH/PDL/PWH/PWL</div>
           <div class="pc-feat"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#00C8D7" stroke-width="1"/><path d="M4 7l2 2 4-4" stroke="#00C8D7" stroke-width="1.3" stroke-linecap="round"/></svg>Update fitur baru</div>
         </div>
-        <button class="pc-btn" onclick="window.location.href='checkout-silver.html'">Mulai 3 Bulan →</button>
+        <button class="pc-btn" onclick="window.location.href=getCheckoutUrl('checkout-silver.html')">Mulai 3 Bulan →</button>
       </div>
 
       <!-- GOLD -->
@@ -788,7 +788,7 @@ footer{border-top:1px solid var(--border);padding:36px 48px;display:flex;align-i
           <div class="pc-feat"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#F5C842" stroke-width="1"/><path d="M4 7l2 2 4-4" stroke="#F5C842" stroke-width="1.3" stroke-linecap="round"/></svg>MTF Levels PDH/PDL/PWH/PWL</div>
           <div class="pc-feat"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#F5C842" stroke-width="1"/><path d="M4 7l2 2 4-4" stroke="#F5C842" stroke-width="1.3" stroke-linecap="round"/></svg>Update fitur baru</div>
         </div>
-        <button class="pc-btn" onclick="window.location.href='checkout-gold.html'">Mulai 6 Bulan →</button>
+        <button class="pc-btn" onclick="window.location.href=getCheckoutUrl('checkout-gold.html')">Mulai 6 Bulan →</button>
       </div>
 
 
@@ -833,7 +833,7 @@ footer{border-top:1px solid var(--border);padding:36px 48px;display:flex;align-i
             <span style="color:rgba(232,213,255,.6)">Bayar </span><strong style="color:#C084FC;font-size:15px">sekali</strong><span style="color:rgba(232,213,255,.6)">, pakai</span><br/>
             <strong style="color:#E9D5FF;font-size:15px">selamanya</strong><span style="color:rgba(232,213,255,.5)"> — tidak ada biaya lagi</span>
           </div>
-          <button class="pc-btn" onclick="window.location.href='checkout-lifetime.html'">✦ Mulai Lifetime →</button>
+          <button class="pc-btn" onclick="window.location.href=getCheckoutUrl('checkout-lifetime.html')">✦ Mulai Lifetime →</button>
           <div style="font-size:11px;color:rgba(192,132,252,.5);text-align:center;letter-spacing:.3px">Termasuk semua update fitur mendatang</div>
         </div>
 
@@ -871,6 +871,20 @@ footer{border-top:1px solid var(--border);padding:36px 48px;display:flex;align-i
 </footer>
 
 <script>
+// ── AFFILIATE REF TRACKING ──
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var ref = params.get('ref');
+  if (ref) {
+    sessionStorage.setItem('etc_ref', ref);
+  }
+})();
+
+function getCheckoutUrl(base) {
+  var ref = sessionStorage.getItem('etc_ref');
+  return ref ? base + '?ref=' + encodeURIComponent(ref) : base;
+}
+
 var cur=document.getElementById('cur'),curR=document.getElementById('curR'),mx=0,my=0,rx=0,ry=0;
 document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
 (function loop(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;cur.style.left=mx+'px';cur.style.top=my+'px';curR.style.left=rx+'px';curR.style.top=ry+'px';requestAnimationFrame(loop);})();
