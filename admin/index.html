@@ -197,6 +197,105 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
   .page { padding: 20px 16px; }
   .nav-tab { padding: 16px 12px; font-size: 12px; }
 }
+
+/* ── MOBILE BOTTOM NAV ──────────────────────────────── */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .nav-tabs {
+    display: none !important;
+  }
+
+  .nav-brand {
+    font-size: 13px !important;
+    letter-spacing: 1.5px !important;
+    margin-right: 8px !important;
+    white-space: nowrap;
+  }
+
+  .nav-right {
+    gap: 6px !important;
+  }
+
+  #auth-status {
+    display: none;
+  }
+
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 200;
+    background: rgba(8,15,26,.97);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    height: 58px;
+    padding: 0;
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    transition: color .2s;
+    padding: 6px 2px;
+    user-select: none;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--cyan);
+  }
+
+  .bottom-nav-item svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .page {
+    padding: 20px 14px 72px !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  .stat-value {
+    font-size: 26px !important;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  td, th {
+    padding: 9px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
 </style>
 </head>
 <body>
@@ -255,7 +354,14 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Order ID</th><th>TV Username</th><th>Produk</th><th>Amount</th><th>Status</th><th>Waktu</th></tr></thead>
+          <thead><tr>
+            <th class="hide-mobile">Order ID</th>
+            <th>TV Username</th>
+            <th class="hide-mobile">Produk</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th class="hide-mobile">Waktu</th>
+          </tr></thead>
           <tbody id="dashboard-txs"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
@@ -267,7 +373,13 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Order ID</th><th>TV Username</th><th>Produk</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead><tr>
+            <th class="hide-mobile">Order ID</th>
+            <th>TV Username</th>
+            <th class="hide-mobile">Produk</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr></thead>
           <tbody id="dashboard-failed"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
@@ -284,7 +396,13 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
       <div id="alert-products" class="alert"></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Product Name (dari Scalev)</th><th>Durasi</th><th>Checkout URL</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead><tr>
+            <th>Product Name</th>
+            <th class="hide-mobile">Durasi</th>
+            <th class="hide-mobile">Checkout URL</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr></thead>
           <tbody id="products-table"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
@@ -303,7 +421,14 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>TV Username</th><th>Email</th><th>Expires</th><th>Total Transaksi</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead><tr>
+            <th>TV Username</th>
+            <th class="hide-mobile">Email</th>
+            <th class="hide-mobile">Expires</th>
+            <th class="hide-mobile">Total Transaksi</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr></thead>
           <tbody id="subscribers-table"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
@@ -319,7 +444,15 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Order ID</th><th>TV Username</th><th>Produk</th><th>Amount</th><th>Expires</th><th>TV Status</th><th>Aksi</th></tr></thead>
+          <thead><tr>
+            <th class="hide-mobile">Order ID</th>
+            <th>TV Username</th>
+            <th class="hide-mobile">Produk</th>
+            <th>Amount</th>
+            <th class="hide-mobile">Expires</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr></thead>
           <tbody id="transactions-table"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
@@ -617,12 +750,12 @@ async function loadDashboard() {
     const recent = txs.transactions.slice(0, 10);
     document.getElementById('dashboard-txs').innerHTML = recent.length
       ? recent.map(t => `<tr>
-          <td class="mono">${t.scalev_order_id}</td>
+          <td class="mono hide-mobile">${t.scalev_order_id}</td>
           <td><strong>${t.tv_username}</strong></td>
-          <td style="font-size:12px;color:var(--muted)">${t.product_name || '—'}</td>
+          <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${t.product_name || '—'}</td>
           <td class="mono">Rp ${parseInt(t.amount||0).toLocaleString('id-ID')}</td>
           <td>${statusBadge(t.tv_access_status)}</td>
-          <td style="font-size:12px;color:var(--muted)">${fmtDate(t.created_at)}</td>
+          <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${fmtDate(t.created_at)}</td>
         </tr>`).join('')
       : '<tr><td colspan="6" class="empty">Belum ada transaksi</td></tr>';
 
@@ -632,13 +765,13 @@ async function loadDashboard() {
     );
     document.getElementById('dashboard-failed').innerHTML = failed.length
       ? failed.map(t => `<tr>
-          <td class="mono">${t.scalev_order_id}</td>
+          <td class="mono hide-mobile">${t.scalev_order_id}</td>
           <td><strong>${t.tv_username}</strong></td>
-          <td style="font-size:12px;color:var(--muted)">${t.product_name || '—'}</td>
+          <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${t.product_name || '—'}</td>
           <td>${statusBadge(t.tv_access_status)}</td>
-          <td style="display:flex;gap:6px;">
-            <button class="btn btn-ghost btn-sm" onclick="retry('${t.scalev_order_id}')">↻ Retry</button>
-            <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${t.scalev_order_id}', '${t.tv_username}')" style="color:var(--cyan)">✎ Edit</button>
+          <td style="display:flex;gap:4px;">
+            <button class="btn btn-ghost btn-sm" onclick="retry('${t.scalev_order_id}')">↻</button>
+            <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${t.scalev_order_id}', '${t.tv_username}')" style="color:var(--cyan)">✎</button>
           </td>
         </tr>`).join('')
       : '<tr><td colspan="5" class="empty">✅ Tidak ada failed order</td></tr>';
@@ -653,8 +786,8 @@ async function loadProducts() {
     document.getElementById('products-table').innerHTML = products.length
       ? products.map(p => `<tr>
           <td><strong>${p.product_name}</strong></td>
-          <td>${p.months ? p.months + ' bulan' : '<span style="color:var(--gold)">Lifetime</span>'}</td>
-          <td style="font-size:11px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.checkout_url || '<span style="color:var(--border)">—</span>'}</td>
+          <td class="hide-mobile">${p.months ? p.months + ' bulan' : '<span style="color:var(--gold)">Lifetime</span>'}</td>
+          <td class="hide-mobile" style="font-size:11px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.checkout_url || '<span style="color:var(--border)">—</span>'}</td>
           <td>
             <label class="toggle">
               <input type="checkbox" ${p.is_active ? 'checked' : ''} onchange="toggleProduct(${p.id}, this.checked)"/>
@@ -753,9 +886,9 @@ function renderSubscribers(list) {
         const expired = !s.is_lifetime && s.expires_at && new Date(s.expires_at) < now;
         return `<tr>
           <td><strong>${s.tv_username}</strong></td>
-          <td style="font-size:12px;color:var(--muted)">${s.email || '—'}</td>
-          <td class="mono" style="font-size:12px">${s.is_lifetime ? '<span style="color:var(--gold)">Lifetime</span>' : (s.expires_at ? fmtDate(s.expires_at) : '—')}</td>
-          <td class="mono">Rp ${parseInt(s.total_transaction||0).toLocaleString('id-ID')}</td>
+          <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${s.email || '—'}</td>
+          <td class="mono hide-mobile" style="font-size:12px">${s.is_lifetime ? '<span style="color:var(--gold)">Lifetime</span>' : (s.expires_at ? fmtDate(s.expires_at) : '—')}</td>
+          <td class="mono hide-mobile">Rp ${parseInt(s.total_transaction||0).toLocaleString('id-ID')}</td>
           <td>${expired ? '<span class="badge badge-red">Expired</span>' : s.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-muted">Inactive</span>'}</td>
           <td><button class="btn btn-ghost btn-sm" onclick="viewSubscriber('${s.tv_username}')">Detail</button></td>
         </tr>`;
@@ -777,16 +910,16 @@ async function loadTransactions() {
     const { transactions } = await api('GET', '/admin/transactions');
     document.getElementById('transactions-table').innerHTML = transactions.length
       ? transactions.map(t => `<tr>
-          <td class="mono" style="font-size:11px">${t.scalev_order_id}</td>
+          <td class="mono hide-mobile" style="font-size:11px">${t.scalev_order_id}</td>
           <td><strong>${t.tv_username}</strong></td>
-          <td style="font-size:12px;color:var(--muted);max-width:200px">${t.product_name || '—'}</td>
+          <td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:200px">${t.product_name || '—'}</td>
           <td class="mono">Rp ${parseInt(t.amount||0).toLocaleString('id-ID')}</td>
-          <td class="mono" style="font-size:12px">${t.is_lifetime ? '<span style="color:var(--gold)">Lifetime</span>' : (t.expires_at ? fmtDate(t.expires_at) : '—')}</td>
+          <td class="mono hide-mobile" style="font-size:12px">${t.is_lifetime ? '<span style="color:var(--gold)">Lifetime</span>' : (t.expires_at ? fmtDate(t.expires_at) : '—')}</td>
           <td>${statusBadge(t.tv_access_status)}</td>
           <td>${['failed','failed_no_username','failed_unknown_product','processing'].includes(t.tv_access_status)
-            ? `<div style="display:flex;gap:6px;">
-                <button class="btn btn-ghost btn-sm" onclick="retry('${t.scalev_order_id}')">↻ Retry</button>
-                <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${t.scalev_order_id}', '${t.tv_username}')" style="color:var(--cyan)">✎ Edit</button>
+            ? `<div style="display:flex;gap:4px;">
+                <button class="btn btn-ghost btn-sm" onclick="retry('${t.scalev_order_id}')">↻</button>
+                <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${t.scalev_order_id}', '${t.tv_username}')" style="color:var(--cyan)">✎</button>
                </div>`
             : ''}</td>
         </tr>`).join('')
@@ -1156,6 +1289,13 @@ async function saveAndRetry() {
     btn.textContent = 'Simpan & Retry Grant';
   }
 }
+
+function mobileNav(name) {
+  showPage(name);
+  document.querySelectorAll('.bottom-nav-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === name);
+  });
+}
 </script>
 
 <!-- MODAL: Edit TV Username -->
@@ -1178,6 +1318,51 @@ async function saveAndRetry() {
         Simpan & Retry Grant
       </button>
     </div>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="bottom-nav" id="admin-bottom-nav">
+  <div class="bottom-nav-item active" onclick="mobileNav('dashboard')" data-page="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+    </svg>
+    Dashboard
+  </div>
+  <div class="bottom-nav-item" onclick="mobileNav('subscribers')" data-page="subscribers">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    Subs
+  </div>
+  <div class="bottom-nav-item" onclick="mobileNav('transactions')" data-page="transactions">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+    Transaksi
+  </div>
+  <div class="bottom-nav-item" onclick="mobileNav('products')" data-page="products">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+    </svg>
+    Produk
+  </div>
+  <div class="bottom-nav-item" onclick="mobileNav('affiliates')" data-page="affiliates">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="17 11 21 7 17 3"/><line x1="21" y1="7" x2="9" y2="7"/>
+      <polyline points="7 21 3 17 7 13"/><line x1="15" y1="17" x2="3" y2="17"/>
+    </svg>
+    Affiliate
+  </div>
+  <div class="bottom-nav-item" onclick="mobileNav('grant')" data-page="grant">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/>
+      <line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    Grant
   </div>
 </div>
 
