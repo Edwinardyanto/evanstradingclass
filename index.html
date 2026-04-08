@@ -878,6 +878,9 @@ footer{border-top:1px solid var(--border);padding:36px 48px;display:flex;align-i
   var ref = params.get('ref');
   if (ref) {
     sessionStorage.setItem('etc_ref', ref);
+    fetch('https://etc-tv-server-production.up.railway.app/track?ref=' +
+      encodeURIComponent(ref) + '&page=homepage', { method: 'GET', credentials: 'include' })
+      .catch(function() {});
   }
 })();
 
