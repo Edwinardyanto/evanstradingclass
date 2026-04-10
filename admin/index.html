@@ -245,7 +245,7 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     align-items: center;
     justify-content: center;
     gap: 2px;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 500;
     color: var(--muted);
     cursor: pointer;
@@ -253,7 +253,7 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     background: transparent;
     font-family: 'DM Sans', sans-serif;
     transition: color .2s;
-    padding: 4px 2px;
+    padding: 6px 1px;
     user-select: none;
     white-space: nowrap;
   }
@@ -263,8 +263,8 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
   }
 
   .admin-bottom-nav-item svg {
-    width: 17px;
-    height: 17px;
+    width: 15px;
+    height: 15px;
   }
 
   .page {
@@ -322,6 +322,7 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     <div class="nav-tab" onclick="showPage('transactions')">Transaksi</div>
     <div class="nav-tab" onclick="showPage('grant')">Manual Grant</div>
     <div class="nav-tab" onclick="showPage('affiliates')">Affiliates</div>
+    <div class="nav-tab" onclick="showPage('traffic')">Traffic</div>
   </div>
   <div class="nav-right">
     <span id="auth-status">not connected</span>
@@ -552,6 +553,85 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     </div>
   </div>
 
+  <!-- ───── PAGE: TRAFFIC ───── -->
+  <div class="page" id="page-traffic">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2 style="margin:0;font-size:18px;letter-spacing:1.5px;">AFFILIATE TRAFFIC</h2>
+        <p style="margin:4px 0 0;font-size:12px;color:var(--muted);">Kunjungan, checkout, dan konversi semua affiliate</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="loadAdminTraffic()">↻ Refresh</button>
+    </div>
+
+    <div id="alert-traffic" class="alert"></div>
+
+    <!-- Summary table -->
+    <div id="traffic-summary-view">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Affiliate</th>
+              <th>Ref Code</th>
+              <th>Pixel</th>
+              <th style="text-align:right;">Kunjungan</th>
+              <th style="text-align:right;">Checkout</th>
+              <th style="text-align:right;">Terbayar</th>
+              <th style="text-align:right;">CR%</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="traffic-table">
+            <tr><td colspan="8" class="empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Detail panel -->
+    <div id="traffic-detail-view" style="display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <button class="btn btn-ghost btn-sm" onclick="closeTrafficDetail()">← Kembali</button>
+        <h3 id="traffic-detail-name" style="margin:0;font-size:16px;letter-spacing:1px;">—</h3>
+        <span id="traffic-detail-refcode" class="badge badge-cyan"></span>
+      </div>
+
+      <!-- Period cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div class="stat-card" style="padding:14px 16px;">
+          <div class="stat-label">HARI INI</div>
+          <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;">
+            <div><div style="font-size:10px;color:var(--muted);">Visit</div><div id="td-today-visit" style="font-size:16px;color:var(--cyan);font-weight:700;">—</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Checkout</div><div id="td-today-checkout" style="font-size:16px;color:var(--gold);font-weight:700;">—</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Paid</div><div id="td-today-paid" style="font-size:16px;color:var(--green);font-weight:700;">—</div></div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding:14px 16px;">
+          <div class="stat-label">7 HARI</div>
+          <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;">
+            <div><div style="font-size:10px;color:var(--muted);">Visit</div><div id="td-week-visit" style="font-size:16px;color:var(--cyan);font-weight:700;">—</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Checkout</div><div id="td-week-checkout" style="font-size:16px;color:var(--gold);font-weight:700;">—</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Paid</div><div id="td-week-paid" style="font-size:16px;color:var(--green);font-weight:700;">—</div></div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding:14px 16px;">
+          <div class="stat-label">ALL TIME</div>
+          <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;">
+            <div><div style="font-size:10px;color:var(--muted);">Visit</div><div id="td-all-visit" style="font-size:16px;color:var(--cyan);font-weight:700;">—</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Checkout</div><div id="td-all-checkout" style="font-size:16px;color:var(--gold);font-weight:700;">—</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Paid</div><div id="td-all-paid" style="font-size:16px;color:var(--green);font-weight:700;">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 30-day trend chart -->
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;font-family:'JetBrains Mono',monospace;margin-bottom:14px;">TREN KUNJUNGAN 30 HARI</div>
+        <div id="td-trend-chart" style="display:flex;align-items:flex-end;gap:3px;height:120px;"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- MODAL: Add/Edit Product -->
@@ -598,6 +678,7 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
       <span id="aff-modal-commission" class="badge badge-muted"></span>
       <span id="aff-modal-type-badge"></span>
       <span id="aff-modal-status-badge"></span>
+      <span id="aff-modal-pixel-badge"></span>
     </div>
 
     <!-- Upline context -->
@@ -734,12 +815,13 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  const tabs = { dashboard:0, products:1, subscribers:2, transactions:3, grant:4, affiliates:5 };
+  const tabs = { dashboard:0, products:1, subscribers:2, transactions:3, grant:4, affiliates:5, traffic:6 };
   document.querySelectorAll('.nav-tab')[tabs[name]]?.classList.add('active');
   if (name === 'products')     loadProducts();
   if (name === 'subscribers')  loadSubscribers();
   if (name === 'transactions') loadTransactions();
   if (name === 'affiliates')   loadAffiliates();
+  if (name === 'traffic')      loadAdminTraffic();
 
   // Sync admin bottom nav
   document.querySelectorAll('.admin-bottom-nav-item').forEach(t => {
@@ -1215,6 +1297,16 @@ async function openAffiliateModal(id) {
       : '<span class="badge badge-muted">Affiliate</span>';
     document.getElementById('aff-modal-status-badge').innerHTML = affiliateStatusBadge(a.status);
 
+    // Pixel badge
+    const pixelBadgeEl = document.getElementById('aff-modal-pixel-badge');
+    if (a.meta_pixel_id) {
+      pixelBadgeEl.innerHTML = a.has_pixel_token
+        ? '<span class="badge" style="background:rgba(74,222,128,.15);color:var(--green);">📊 Pixel + Token</span>'
+        : '<span class="badge" style="background:rgba(245,200,66,.15);color:var(--gold);">📊 Pixel (no token)</span>';
+    } else {
+      pixelBadgeEl.innerHTML = '<span class="badge badge-muted">No Pixel</span>';
+    }
+
     // Upline context
     if (a.upline_id) {
       document.getElementById('aff-upline-context').style.display = 'block';
@@ -1270,6 +1362,98 @@ function closeAffiliateModal() {
   document.getElementById('affiliate-modal').classList.remove('open');
   currentAffiliateId = null;
   currentAffiliateData = null;
+}
+
+// ── Admin Traffic ─────────────────────────────────────────────────
+async function loadAdminTraffic() {
+  document.getElementById('traffic-summary-view').style.display = '';
+  document.getElementById('traffic-detail-view').style.display = 'none';
+  const tbody = document.getElementById('traffic-table');
+  tbody.innerHTML = '<tr><td colspan="8" class="empty">Loading...</td></tr>';
+  try {
+    const { affiliates } = await api('GET', '/admin/traffic');
+    if (!affiliates.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">Belum ada data</td></tr>';
+      return;
+    }
+    tbody.innerHTML = affiliates.map(a => {
+      const visits = parseInt(a.visits || 0);
+      const checkouts = parseInt(a.checkouts || 0);
+      const paid = parseInt(a.paid || 0);
+      const cr = visits > 0 ? ((paid / visits) * 100).toFixed(1) : '0.0';
+      let pixelBadge;
+      if (a.meta_pixel_id) {
+        pixelBadge = a.has_pixel_token
+          ? '<span class="badge" style="background:rgba(74,222,128,.15);color:var(--green);font-size:10px;">📊 Pixel</span>'
+          : '<span class="badge" style="background:rgba(245,200,66,.15);color:var(--gold);font-size:10px;">⚠ No Token</span>';
+      } else {
+        pixelBadge = '<span class="badge badge-muted" style="font-size:10px;">—</span>';
+      }
+      const safeName = (a.name || '').replace(/'/g, "\\'");
+      return `<tr>
+        <td><strong>${a.name}</strong></td>
+        <td class="mono" style="font-size:12px;">${a.ref_code}</td>
+        <td>${pixelBadge}</td>
+        <td class="mono" style="text-align:right;color:var(--cyan);">${visits.toLocaleString('id-ID')}</td>
+        <td class="mono" style="text-align:right;color:var(--gold);">${checkouts.toLocaleString('id-ID')}</td>
+        <td class="mono" style="text-align:right;color:var(--green);">${paid.toLocaleString('id-ID')}</td>
+        <td class="mono" style="text-align:right;font-size:12px;">${cr}%</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="loadTrafficDetail(${a.id}, '${safeName}', '${a.ref_code}')">Detail</button></td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    showAlert('traffic', e.message, 'error');
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>';
+  }
+}
+
+async function loadTrafficDetail(affiliateId, name, refCode) {
+  document.getElementById('traffic-summary-view').style.display = 'none';
+  document.getElementById('traffic-detail-view').style.display = '';
+  document.getElementById('traffic-detail-name').textContent = (name || '').toUpperCase();
+  document.getElementById('traffic-detail-refcode').textContent = refCode || '';
+  try {
+    const d = await api('GET', `/admin/traffic/${affiliateId}`);
+    document.getElementById('td-today-visit').textContent    = d.today.homepage.total.toLocaleString('id-ID');
+    document.getElementById('td-today-checkout').textContent = d.today.checkout.total.toLocaleString('id-ID');
+    document.getElementById('td-today-paid').textContent     = d.today.paid.total.toLocaleString('id-ID');
+    document.getElementById('td-week-visit').textContent     = d.last_7_days.homepage.total.toLocaleString('id-ID');
+    document.getElementById('td-week-checkout').textContent  = d.last_7_days.checkout.total.toLocaleString('id-ID');
+    document.getElementById('td-week-paid').textContent      = d.last_7_days.paid.total.toLocaleString('id-ID');
+    document.getElementById('td-all-visit').textContent      = d.all_time.homepage.total.toLocaleString('id-ID');
+    document.getElementById('td-all-checkout').textContent   = d.all_time.checkout.total.toLocaleString('id-ID');
+    document.getElementById('td-all-paid').textContent       = d.all_time.paid.total.toLocaleString('id-ID');
+
+    // 30-day trend chart
+    const chart = document.getElementById('td-trend-chart');
+    const trendMap = {};
+    (d.trend || []).forEach(t => {
+      const dt = new Date(t.date);
+      const key = dt.toISOString().slice(0, 10);
+      trendMap[key] = parseInt(t.visits || 0);
+    });
+    const today = new Date();
+    const days = [];
+    for (let i = 29; i >= 0; i--) {
+      const dt = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+      const key = dt.toISOString().slice(0, 10);
+      days.push({ key, label: dt.getDate() + '/' + (dt.getMonth() + 1), value: trendMap[key] || 0 });
+    }
+    const max = Math.max(1, ...days.map(d => d.value));
+    chart.innerHTML = days.map(day => {
+      const h = Math.max(2, Math.round((day.value / max) * 100));
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div title="${day.label}: ${day.value} visit" style="width:100%;height:${h}%;background:${day.value > 0 ? 'var(--cyan)' : 'var(--border)'};border-radius:2px 2px 0 0;"></div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    showAlert('traffic', e.message, 'error');
+  }
+}
+
+function closeTrafficDetail() {
+  document.getElementById('traffic-detail-view').style.display = 'none';
+  document.getElementById('traffic-summary-view').style.display = '';
 }
 
 async function saveMasterSetting() {
@@ -1459,6 +1643,14 @@ async function saveAndRetry() {
       <line x1="18" y1="11" x2="18" y2="17"/><line x1="15" y1="14" x2="21" y2="14"/>
     </svg>
     Affiliate
+  </div>
+  <div class="admin-bottom-nav-item" onclick="showPage('traffic')" data-page="traffic">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/>
+      <line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    Traffic
   </div>
   <div class="admin-bottom-nav-item" onclick="showPage('grant')" data-page="grant">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
