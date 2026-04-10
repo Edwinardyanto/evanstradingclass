@@ -291,11 +291,13 @@ document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
 // Fire tracking ping — checkout visit
 (function() {
   var ref = sessionStorage.getItem('etc_ref') || new URLSearchParams(window.location.search).get('ref');
-  if (ref) {
-    fetch('https://etc-tv-server-production.up.railway.app/track?ref=' +
-      encodeURIComponent(ref) + '&page=checkout', { method: 'GET', credentials: 'include' })
-      .catch(function() {});
-  }
+  if (!ref) return;
+  var trackKey = 'etc_tracked_checkout_' + ref;
+  if (sessionStorage.getItem(trackKey)) return;
+  sessionStorage.setItem(trackKey, '1');
+  fetch('https://etc-tv-server-production.up.railway.app/track?ref=' +
+    encodeURIComponent(ref) + '&page=checkout', { method: 'GET', credentials: 'include' })
+    .catch(function() {});
 })();
 
 // Inject Meta pixels on checkout page
