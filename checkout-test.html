@@ -330,8 +330,31 @@ document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
     fetch(SERVER + '/pixel-config/' + encodeURIComponent(ref))
       .then(function(r) { return r.json(); })
       .then(function(data) {
+        // Meta pixel
         if (data.meta_pixel_id && data.meta_pixel_id !== ownerPixelId) {
           loadPixelAndFire(data.meta_pixel_id, 'InitiateCheckout');
+        }
+        // Google Ads — load config on checkout page (conversion fired on paid)
+        if (data.google_ads_id && data.google_ads_label) {
+          if (!window._gtagLoaded) {
+            var s = document.createElement('script');
+            s.async = true;
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=' + data.google_ads_id;
+            document.head.appendChild(s);
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = function() { window.dataLayer.push(arguments); };
+            window.gtag('js', new Date());
+            window._gtagLoaded = true;
+            window._gtagIds = new Set();
+          }
+          if (!window._gtagIds) window._gtagIds = new Set();
+          if (!window._gtagIds.has(data.google_ads_id)) {
+            window._gtagIds.add(data.google_ads_id);
+            window.gtag('config', data.google_ads_id);
+          }
+          sessionStorage.setItem('etc_gads_id', data.google_ads_id);
+          sessionStorage.setItem('etc_gads_label', data.google_ads_label);
+          console.log('📊 Google Ads config loaded for checkout:', data.google_ads_id);
         }
       })
       .catch(function() {});

@@ -911,15 +911,48 @@ function injectMetaPixels(refCode, eventName) {
   // 1. Always fire owner pixel event (init already done above)
   loadMetaPixel(ownerPixelId, eventName);
 
-  // 2. Fire affiliate pixel if they have one
+  // 2. Fire affiliate pixel(s) if they have one
   fetch(SERVER + '/pixel-config/' + encodeURIComponent(refCode))
     .then(function(r) { return r.json(); })
     .then(function(data) {
+      // Meta pixel
       if (data.meta_pixel_id && data.meta_pixel_id !== ownerPixelId) {
         loadMetaPixel(data.meta_pixel_id, eventName);
       }
+      // Google Ads
+      if (data.google_ads_id && data.google_ads_label) {
+        loadGoogleAds(data.google_ads_id, data.google_ads_label, 'page_view');
+      }
     })
     .catch(function() {});
+}
+
+function loadGoogleAds(conversionId, conversionLabel, eventType) {
+  // Load gtag script if not already loaded
+  if (!window._gtagLoaded) {
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + conversionId;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function() { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window._gtagLoaded = true;
+    window._gtagIds = new Set();
+  }
+  if (!window._gtagIds) window._gtagIds = new Set();
+  if (!window._gtagIds.has(conversionId)) {
+    window._gtagIds.add(conversionId);
+    window.gtag('config', conversionId);
+  }
+  if (eventType === 'conversion' && conversionLabel) {
+    window.gtag('event', 'conversion', {
+      send_to: conversionId + '/' + conversionLabel
+    });
+    console.log('📊 Google Ads conversion fired:', conversionId + '/' + conversionLabel);
+  } else {
+    console.log('📊 Google Ads config loaded:', conversionId);
+  }
 }
 
 function loadMetaPixel(pixelId, eventName) {

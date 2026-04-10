@@ -1381,13 +1381,18 @@ async function loadAdminTraffic() {
       const checkouts = parseInt(a.checkouts || 0);
       const paid = parseInt(a.paid || 0);
       const cr = visits > 0 ? ((paid / visits) * 100).toFixed(1) : '0.0';
-      let pixelBadge;
+      let pixelBadge = '';
       if (a.meta_pixel_id) {
-        pixelBadge = a.has_pixel_token
-          ? '<span class="badge" style="background:rgba(74,222,128,.15);color:var(--green);font-size:10px;">📊 Pixel</span>'
-          : '<span class="badge" style="background:rgba(245,200,66,.15);color:var(--gold);font-size:10px;">⚠ No Token</span>';
+        pixelBadge += a.has_pixel_token
+          ? '<span class="badge" style="background:rgba(74,222,128,.15);color:var(--green);font-size:10px;margin-right:4px;">Meta ✓</span>'
+          : '<span class="badge" style="background:rgba(245,200,66,.15);color:var(--gold);font-size:10px;margin-right:4px;">Meta ⚠</span>';
       } else {
-        pixelBadge = '<span class="badge badge-muted" style="font-size:10px;">—</span>';
+        pixelBadge += '<span class="badge badge-muted" style="font-size:10px;margin-right:4px;">Meta —</span>';
+      }
+      if (a.google_ads_id) {
+        pixelBadge += '<span class="badge badge-cyan" style="font-size:10px;">GAds ✓</span>';
+      } else {
+        pixelBadge += '<span class="badge badge-muted" style="font-size:10px;">GAds —</span>';
       }
       const safeName = (a.name || '').replace(/'/g, "\\'");
       return `<tr>

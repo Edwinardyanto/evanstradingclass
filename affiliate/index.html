@@ -674,6 +674,46 @@ input:focus, select:focus { border-color: var(--cyan2); }
           <button class="btn btn-ghost" onclick="clearPixelSettings()">Hapus</button>
         </div>
       </div>
+
+      <!-- Google Ads section -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:560px;margin-top:20px;">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;
+          font-family:'JetBrains Mono',monospace;margin-bottom:20px;">Google Ads</div>
+
+        <div style="background:rgba(0,200,215,.06);border:1px solid rgba(0,200,215,.15);
+          border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--muted);line-height:1.8;">
+          Dengan mengisi Google Ads Conversion ID dan Label, setiap kali ada yang buka
+          halaman checkout lewat link kamu, pixel Google Ads kamu akan aktif untuk
+          remarketing dan audience building.
+          <br/><br/>
+          <strong style="color:var(--white);">Cara dapat Conversion ID & Label:</strong><br/>
+          1. Buka <span style="color:var(--cyan);font-family:'JetBrains Mono',monospace;">ads.google.com</span><br/>
+          2. Goals → Conversions → + New conversion action → Website<br/>
+          3. Pilih kategori Purchase → isi nama → Save<br/>
+          4. Pilih "Install the tag yourself"<br/>
+          5. Copy <strong style="color:var(--white)">Conversion ID</strong> (format: AW-XXXXXXXXX)
+             dan <strong style="color:var(--white)">Conversion Label</strong>
+        </div>
+
+        <div class="form-group">
+          <label>Google Ads Conversion ID</label>
+          <input type="text" id="s-gads-id" placeholder="contoh: AW-123456789"
+            style="font-family:'JetBrains Mono',monospace;"/>
+          <div class="hint">Format: AW-XXXXXXXXX</div>
+        </div>
+
+        <div class="form-group">
+          <label>Google Ads Conversion Label</label>
+          <input type="text" id="s-gads-label" placeholder="contoh: AbCdEfGhIjKlMnOp"
+            style="font-family:'JetBrains Mono',monospace;"/>
+          <div class="hint">String pendek yang didapat bersama Conversion ID</div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button class="btn btn-primary" onclick="savePixelSettings()">Simpan</button>
+          <button class="btn btn-ghost" onclick="clearGadsSettings()">Hapus Google Ads</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1324,14 +1364,20 @@ async function loadPixelSettings() {
     const p = data.pixels;
     document.getElementById('s-meta-pixel-id').value = p.meta_pixel_id || '';
     document.getElementById('s-meta-token').value = p.meta_access_token || '';
+    document.getElementById('s-gads-id').value = p.google_ads_id || '';
+    document.getElementById('s-gads-label').value = p.google_ads_label || '';
   } catch(e) { console.error('loadPixelSettings error:', e); }
 }
 
 async function savePixelSettings() {
   const meta_pixel_id = document.getElementById('s-meta-pixel-id').value.trim();
   const meta_access_token = document.getElementById('s-meta-token').value.trim();
+  const google_ads_id = document.getElementById('s-gads-id').value.trim();
+  const google_ads_label = document.getElementById('s-gads-label').value.trim();
   try {
-    await api('PUT', '/affiliate/pixels', { meta_pixel_id, meta_access_token });
+    await api('PUT', '/affiliate/pixels', {
+      meta_pixel_id, meta_access_token, google_ads_id, google_ads_label
+    });
     showPageAlert('settings-alert', 'Pixel settings disimpan!', 'success');
   } catch(e) {
     showPageAlert('settings-alert', e.message, 'error');
@@ -1339,12 +1385,34 @@ async function savePixelSettings() {
 }
 
 async function clearPixelSettings() {
-  if (!confirm('Hapus pixel settings?')) return;
+  if (!confirm('Hapus semua pixel settings?')) return;
   try {
-    await api('PUT', '/affiliate/pixels', { meta_pixel_id: null, meta_access_token: null });
+    await api('PUT', '/affiliate/pixels', {
+      meta_pixel_id: null, meta_access_token: null,
+      google_ads_id: null, google_ads_label: null
+    });
     document.getElementById('s-meta-pixel-id').value = '';
     document.getElementById('s-meta-token').value = '';
-    showPageAlert('settings-alert', 'Pixel settings dihapus', 'success');
+    document.getElementById('s-gads-id').value = '';
+    document.getElementById('s-gads-label').value = '';
+    showPageAlert('settings-alert', 'Semua pixel settings dihapus', 'success');
+  } catch(e) {
+    showPageAlert('settings-alert', e.message, 'error');
+  }
+}
+
+async function clearGadsSettings() {
+  if (!confirm('Hapus Google Ads settings?')) return;
+  const meta_pixel_id = document.getElementById('s-meta-pixel-id').value.trim();
+  const meta_access_token = document.getElementById('s-meta-token').value.trim();
+  try {
+    await api('PUT', '/affiliate/pixels', {
+      meta_pixel_id, meta_access_token,
+      google_ads_id: null, google_ads_label: null
+    });
+    document.getElementById('s-gads-id').value = '';
+    document.getElementById('s-gads-label').value = '';
+    showPageAlert('settings-alert', 'Google Ads settings dihapus', 'success');
   } catch(e) {
     showPageAlert('settings-alert', e.message, 'error');
   }
