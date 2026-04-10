@@ -635,6 +635,48 @@ input:focus, select:focus { border-color: var(--cyan2); }
     </div>
   </div>
 
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="section">
+      <div class="section-title" style="margin-bottom:20px;">Pengaturan Pixel</div>
+      <div class="alert" id="settings-alert"></div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:560px;">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;
+          font-family:'JetBrains Mono',monospace;margin-bottom:20px;">Meta Pixel</div>
+
+        <div style="background:rgba(0,200,215,.06);border:1px solid rgba(0,200,215,.15);
+          border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--muted);line-height:1.8;">
+          Dengan mengisi Pixel ID dan Access Token Meta kamu, setiap pembelian yang terjadi lewat
+          link referral kamu akan otomatis tercatat sebagai konversi di akun Meta Ads kamu.
+          <br/><br/>
+          <strong style="color:var(--white);">Cara dapat Access Token:</strong><br/>
+          1. Buka <span style="color:var(--cyan);font-family:'JetBrains Mono',monospace;">business.facebook.com/events_manager2</span><br/>
+          2. Pilih pixel kamu → tab Settings<br/>
+          3. Scroll ke Conversions API → Generate access token
+        </div>
+
+        <div class="form-group">
+          <label>Meta Pixel ID</label>
+          <input type="text" id="s-meta-pixel-id" placeholder="contoh: 1234567890123456"
+            style="font-family:'JetBrains Mono',monospace;"/>
+          <div class="hint">Angka 15–16 digit dari Events Manager</div>
+        </div>
+
+        <div class="form-group">
+          <label>Meta Access Token</label>
+          <input type="password" id="s-meta-token" placeholder="EAABsbCS..."/>
+          <div class="hint">Dari tab Settings pixel → Conversions API → Generate access token</div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button class="btn btn-primary" onclick="savePixelSettings()">Simpan</button>
+          <button class="btn btn-ghost" onclick="clearPixelSettings()">Hapus</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- CONFIRM MODAL -->
@@ -734,6 +776,7 @@ function buildNav() {
     { id: 'traffic', label: 'Traffic' },
     { id: 'withdraw', label: 'Withdraw' },
     { id: 'payouts', label: 'Pembayaran' },
+    { id: 'settings', label: 'Pengaturan' },
   ];
   document.getElementById('nav-tabs').innerHTML = tabs.map(t =>
     '<div class="nav-tab" onclick="showPage(\'' + t.id + '\')" data-page="' + t.id + '">' + t.label + '</div>'
@@ -760,6 +803,7 @@ function showPage(name) {
   if (name === 'traffic') loadTraffic();
   if (name === 'withdraw') loadWithdrawable();
   if (name === 'payouts') loadPayouts();
+  if (name === 'settings') loadPixelSettings();
 
   // Sync bottom nav active state
   document.querySelectorAll('.bottom-nav-item').forEach(t => {
@@ -1273,6 +1317,39 @@ async function loadTraffic() {
   }
 }
 
+// ── Pixel Settings ──────────────────────────────────────────────
+async function loadPixelSettings() {
+  try {
+    const data = await api('GET', '/affiliate/pixels');
+    const p = data.pixels;
+    document.getElementById('s-meta-pixel-id').value = p.meta_pixel_id || '';
+    document.getElementById('s-meta-token').value = p.meta_access_token || '';
+  } catch(e) { console.error('loadPixelSettings error:', e); }
+}
+
+async function savePixelSettings() {
+  const meta_pixel_id = document.getElementById('s-meta-pixel-id').value.trim();
+  const meta_access_token = document.getElementById('s-meta-token').value.trim();
+  try {
+    await api('PUT', '/affiliate/pixels', { meta_pixel_id, meta_access_token });
+    showPageAlert('settings-alert', 'Pixel settings disimpan!', 'success');
+  } catch(e) {
+    showPageAlert('settings-alert', e.message, 'error');
+  }
+}
+
+async function clearPixelSettings() {
+  if (!confirm('Hapus pixel settings?')) return;
+  try {
+    await api('PUT', '/affiliate/pixels', { meta_pixel_id: null, meta_access_token: null });
+    document.getElementById('s-meta-pixel-id').value = '';
+    document.getElementById('s-meta-token').value = '';
+    showPageAlert('settings-alert', 'Pixel settings dihapus', 'success');
+  } catch(e) {
+    showPageAlert('settings-alert', e.message, 'error');
+  }
+}
+
 // ── Shareable Links ──────────────────────────────────────────────
 async function loadShareableLinks(refCode) {
   const container = document.getElementById('shareable-links');
@@ -1685,6 +1762,13 @@ document.getElementById('withdraw-modal').addEventListener('click', function(e) 
       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
     </svg>
     Bayar
+  </div>
+  <div class="bottom-nav-item" onclick="showPage('settings')" data-page="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    Setting
   </div>
 </div>
 

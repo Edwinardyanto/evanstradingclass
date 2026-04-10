@@ -298,6 +298,46 @@ document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
   }
 })();
 
+// Inject Meta pixels on checkout page
+(function() {
+  var ref = sessionStorage.getItem('etc_ref') ||
+    new URLSearchParams(window.location.search).get('ref');
+  var ownerPixelId = '939714922110573';
+  var SERVER = 'https://etc-tv-server-production.up.railway.app';
+
+  function loadPixelAndFire(pixelId, eventName) {
+    if (!window.fbq) {
+      !function(f,b,e,v,n,t,s){
+        if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)
+      }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    }
+    if (!window._loadedPixels) window._loadedPixels = new Set();
+    if (!window._loadedPixels.has(pixelId)) {
+      window._loadedPixels.add(pixelId);
+      fbq('init', pixelId);
+    }
+    fbq('track', eventName);
+    console.log('📊 Meta pixel fired:', pixelId, eventName);
+  }
+
+  loadPixelAndFire(ownerPixelId, 'InitiateCheckout');
+
+  if (ref) {
+    fetch(SERVER + '/pixel-config/' + encodeURIComponent(ref))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.meta_pixel_id && data.meta_pixel_id !== ownerPixelId) {
+          loadPixelAndFire(data.meta_pixel_id, 'InitiateCheckout');
+        }
+      })
+      .catch(function() {});
+  }
+})();
+
 // ── Checkout Logic ────────────────────────────────────────────────
 var API = 'https://etc-tv-server-production.up.railway.app';
 

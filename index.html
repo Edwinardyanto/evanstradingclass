@@ -872,7 +872,26 @@ footer{border-top:1px solid var(--border);padding:36px 48px;display:flex;align-i
 </footer>
 
 <script>
-// ── AFFILIATE REF TRACKING ──
+// ── META PIXEL — OWNER (fires for ALL visitors) ──
+(function() {
+  if (!window.fbq) {
+    !function(f,b,e,v,n,t,s){
+      if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)
+    }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  }
+  if (!window._loadedPixels) window._loadedPixels = new Set();
+  if (!window._loadedPixels.has('939714922110573')) {
+    window._loadedPixels.add('939714922110573');
+    fbq('init', '939714922110573');
+    fbq('track', 'PageView');
+  }
+})();
+
+// ── AFFILIATE REF TRACKING + PIXEL INJECT ──
 (function() {
   var params = new URLSearchParams(window.location.search);
   var ref = params.get('ref');
@@ -881,8 +900,46 @@ footer{border-top:1px solid var(--border);padding:36px 48px;display:flex;align-i
     fetch('https://etc-tv-server-production.up.railway.app/track?ref=' +
       encodeURIComponent(ref) + '&page=homepage', { method: 'GET', credentials: 'include' })
       .catch(function() {});
+    injectMetaPixels(ref, 'ViewContent');
   }
 })();
+
+function injectMetaPixels(refCode, eventName) {
+  var SERVER = 'https://etc-tv-server-production.up.railway.app';
+  var ownerPixelId = '939714922110573';
+
+  // 1. Always fire owner pixel event (init already done above)
+  loadMetaPixel(ownerPixelId, eventName);
+
+  // 2. Fire affiliate pixel if they have one
+  fetch(SERVER + '/pixel-config/' + encodeURIComponent(refCode))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.meta_pixel_id && data.meta_pixel_id !== ownerPixelId) {
+        loadMetaPixel(data.meta_pixel_id, eventName);
+      }
+    })
+    .catch(function() {});
+}
+
+function loadMetaPixel(pixelId, eventName) {
+  if (!window._loadedPixels) window._loadedPixels = new Set();
+  if (!window.fbq) {
+    !function(f,b,e,v,n,t,s){
+      if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)
+    }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  }
+  if (!window._loadedPixels.has(pixelId)) {
+    window._loadedPixels.add(pixelId);
+    fbq('init', pixelId);
+  }
+  fbq('track', eventName);
+  console.log('📊 Meta pixel fired:', pixelId, eventName);
+}
 
 function getCheckoutUrl(base) {
   var ref = sessionStorage.getItem('etc_ref');
