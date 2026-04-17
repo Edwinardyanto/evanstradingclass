@@ -418,6 +418,7 @@ input:focus, select:focus { border-color: var(--cyan2); }
     <h2>DAFTAR AFFILIATE</h2>
     <p class="subtitle" id="reg-subtitle">Buat akun affiliate baru</p>
     <div class="alert alert-info" id="recruit-info" style="display:none"></div>
+    <div id="reg-type-banner" style="display:none;border-radius:12px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.5;"></div>
     <div class="alert" id="register-alert"></div>
     <div class="form-group">
       <label>Nama Lengkap</label>
@@ -441,6 +442,7 @@ input:focus, select:focus { border-color: var(--cyan2); }
       <input type="password" id="reg-password" placeholder="Minimal 6 karakter"/>
     </div>
     <input type="hidden" id="reg-recruitment-token" value=""/>
+    <input type="hidden" id="reg-affiliate-type" value="affiliate"/>
     <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="doRegister()" id="register-btn">Daftar</button>
     <div class="auth-link" onclick="showScreen('login')">Sudah punya akun? Login di sini</div>
   </div>
@@ -790,6 +792,7 @@ async function api(method, path, body) {
 
 // ── Screen Management ────────────────────────────────────────────
 function showScreen(name) {
+  if (name === 'register') initRegisterType();
   document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
   document.getElementById('app').style.display = 'none';
   document.getElementById('nav-tabs').innerHTML = '';
@@ -892,7 +895,8 @@ async function doRegister() {
   btn.disabled = true; btn.textContent = 'Loading...';
 
   try {
-    const body = { name, email, phone: phone || undefined, password };
+    const affiliate_type = (document.getElementById('reg-affiliate-type') || {}).value || 'affiliate';
+    const body = { name, email, phone: phone || undefined, password, affiliate_type };
     if (ref_code) body.ref_code = ref_code;
     if (recruitment_token) body.recruitment_token = recruitment_token;
 
@@ -912,6 +916,46 @@ async function doRegister() {
     showAuthAlert('register-alert', e.message, 'error');
   } finally {
     btn.disabled = false; btn.textContent = 'Daftar';
+  }
+}
+
+function initRegisterType() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const rawType = (params.get('type') || '').toLowerCase();
+    const type = rawType === 'master' ? 'master' : 'affiliate';
+
+    const hidden = document.getElementById('reg-affiliate-type');
+    if (hidden) hidden.value = type;
+
+    const banner = document.getElementById('reg-type-banner');
+    if (!banner) return;
+
+    // Don't override the recruit-info banner when a recruitment_token is present
+    const tokenInput = document.getElementById('reg-recruitment-token');
+    if (tokenInput && tokenInput.value) {
+      banner.style.display = 'none';
+      return;
+    }
+
+    if (type === 'master') {
+      banner.style.background = 'rgba(245,200,66,0.10)';
+      banner.style.border = '1px solid #F5C842';
+      banner.style.color = 'var(--white)';
+      banner.innerHTML =
+        '<div style="font-weight:800;color:#F5C842;letter-spacing:1px;text-transform:uppercase;font-size:11px;margin-bottom:6px;">★ Master Affiliate</div>' +
+        '<div>Komisi <strong style="color:#F5C842;">50%</strong> dari setiap penjualan via link referralmu.</div>';
+    } else {
+      banner.style.background = 'rgba(0,200,215,0.08)';
+      banner.style.border = '1px solid rgba(0,200,215,0.3)';
+      banner.style.color = 'var(--white)';
+      banner.innerHTML =
+        '<div style="font-weight:800;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;font-size:11px;margin-bottom:6px;">Affiliate</div>' +
+        '<div>Komisi <strong style="color:var(--cyan);">10%</strong> dari setiap penjualan via link referralmu.</div>';
+    }
+    banner.style.display = 'block';
+  } catch (e) {
+    console.warn('initRegisterType error:', e);
   }
 }
 
@@ -1771,6 +1815,13 @@ function updateRecruitSlider(maxComm) {
     } catch (e) {
       console.warn('Invalid join token:', e.message);
     }
+  }
+
+  // If a registration type is provided in URL, jump straight to register screen
+  const regType = new URLSearchParams(window.location.search).get('type');
+  if (regType === 'master' || regType === 'affiliate') {
+    showScreen('register');
+    return;
   }
 
   showScreen('login');
