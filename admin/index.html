@@ -524,6 +524,38 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
 
     <div id="alert-affiliates" class="alert"></div>
 
+    <!-- REGISTRATION LINKS BANNER -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:20px">
+
+      <!-- MASTER AFFILIATE LINK -->
+      <div style="background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.4);border-radius:10px;padding:16px 18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:14px">★</span>
+          <div style="font-size:12px;font-weight:700;color:#F5C842;letter-spacing:1.5px;text-transform:uppercase">Master Affiliate</div>
+          <span style="margin-left:auto;background:rgba(245,200,66,.18);color:#F5C842;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px">50% Komisi</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Share link ini untuk daftar sebagai Master Affiliate (50%)</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <code id="reg-link-master" style="flex:1;min-width:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:#F5C842;background:rgba(245,200,66,.08);padding:8px 12px;border-radius:6px;border:1px solid rgba(245,200,66,.2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://evanstradingclass.com/affiliate/?type=master</code>
+          <button onclick="copyText('https://evanstradingclass.com/affiliate/?type=master', this)" style="background:#F5C842;border:none;border-radius:6px;padding:8px 16px;color:#080F1A;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Copy</button>
+        </div>
+      </div>
+
+      <!-- STANDARD AFFILIATE LINK -->
+      <div style="background:rgba(0,200,215,.06);border:1px solid rgba(0,200,215,.25);border-radius:10px;padding:16px 18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:700;color:var(--cyan);letter-spacing:1.5px;text-transform:uppercase">Affiliate</div>
+          <span style="margin-left:auto;background:rgba(0,200,215,.15);color:var(--cyan);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px">10% Komisi</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Share link ini untuk daftar sebagai Affiliate standar (10%)</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <code id="reg-link-affiliate" style="flex:1;min-width:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(0,200,215,.06);padding:8px 12px;border-radius:6px;border:1px solid rgba(0,200,215,.15);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://evanstradingclass.com/affiliate/?type=affiliate</code>
+          <button onclick="copyText('https://evanstradingclass.com/affiliate/?type=affiliate', this)" style="background:var(--cyan2);border:none;border-radius:6px;padding:8px 16px;color:var(--bg);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Copy</button>
+        </div>
+      </div>
+
+    </div>
+
     <!-- LIST VIEW -->
     <div id="aff-list-view">
       <div class="table-wrap">
@@ -909,6 +941,14 @@ async function api(method, path, body) {
   const json = await res.json();
   if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
   return json;
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
 }
 
 // ── Nav ───────────────────────────────────────────────────────────

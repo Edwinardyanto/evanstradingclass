@@ -197,11 +197,29 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
         </div>
 
         <div style="margin-bottom:18px;">
+          <label style="font-size:11px;font-weight:600;color:#4A7080;display:block;margin-bottom:8px;">Kode Promo (opsional)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="f-promo" placeholder="Masukkan kode promo"
+              oninput="this.value=this.value.toUpperCase()"
+              style="flex:1;padding:10px 14px;border:1px solid #dce3ea;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:#0C1628;"
+              onfocus="this.style.borderColor='#18B0C0'" onblur="this.style.borderColor='#dce3ea'"/>
+            <button type="button" onclick="applyPromo()" id="promo-btn"
+              style="background:rgba(0,200,215,.1);border:1px solid rgba(0,200,215,.3);padding:10px 16px;border-radius:8px;color:#18B0C0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">
+              APPLY
+            </button>
+          </div>
+          <div id="promo-result" style="display:none;margin-top:6px;font-size:12px;padding:8px 12px;border-radius:6px;"></div>
+        </div>
+
+        <div style="margin-bottom:18px;">
           <label style="font-size:11px;font-weight:600;color:#4A7080;display:block;margin-bottom:8px;">Metode Pembayaran</label>
-          <div id="payment-methods" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
-              <input type="radio" name="payment" value="qris" style="accent-color:#18B0C0;"/> QRIS
-            </label>
+
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;padding:9px 13px;background:rgba(0,200,215,.06);border:1px solid rgba(0,200,215,.15);border-radius:8px;">
+            <span style="color:var(--cyan);font-size:12px;">●</span>
+            <span style="font-size:11.5px;color:#18B0C0;font-weight:500;">Akses dikirim otomatis setelah pembayaran dikonfirmasi</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="payment-methods">
             <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
               <input type="radio" name="payment" value="dana" style="accent-color:#18B0C0;"/> Dana
             </label>
@@ -212,41 +230,41 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
               <input type="radio" name="payment" value="ovo" style="accent-color:#18B0C0;"/> OVO
             </label>
             <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="qris" style="accent-color:#18B0C0;"/> QRIS
+            </label>
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
               <input type="radio" name="payment" value="shopeepay" style="accent-color:#18B0C0;"/> ShopeePay
             </label>
             <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
               <input type="radio" name="payment" value="linkaja" style="accent-color:#18B0C0;"/> LinkAja
             </label>
-            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;grid-column:1/-1;">
-              <input type="radio" name="payment" value="va" style="accent-color:#18B0C0;" onchange="document.getElementById('va-options').style.display='flex'"/> Virtual Account (Transfer Bank)
-            </label>
           </div>
 
-          <div id="va-options" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;padding:10px 12px;background:#f8fafc;border:1px solid #dce3ea;border-radius:8px;">
-            <div style="font-size:10px;color:#4A7080;font-weight:600;width:100%;margin-bottom:4px;">Pilih Bank:</div>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
-              <input type="radio" name="va_bank" value="BNI" style="accent-color:#18B0C0;"/> BNI
+          <div style="font-size:10px;font-weight:600;color:#4A7080;letter-spacing:1px;text-transform:uppercase;margin:12px 0 8px;">Virtual Account</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="va_BNI" style="accent-color:#18B0C0;"/> BNI
             </label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
-              <input type="radio" name="va_bank" value="BRI" style="accent-color:#18B0C0;"/> BRI
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="va_BRI" style="accent-color:#18B0C0;"/> BRI
             </label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
-              <input type="radio" name="va_bank" value="MANDIRI" style="accent-color:#18B0C0;"/> Mandiri
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="va_BSI" style="accent-color:#18B0C0;"/> BSI
             </label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
-              <input type="radio" name="va_bank" value="BSI" style="accent-color:#18B0C0;"/> BSI
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="va_BJB" style="accent-color:#18B0C0;"/> BJB
             </label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
-              <input type="radio" name="va_bank" value="CIMB" style="accent-color:#18B0C0;"/> CIMB
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="va_CIMB" style="accent-color:#18B0C0;"/> CIMB Niaga
             </label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
-              <input type="radio" name="va_bank" value="PERMATA" style="accent-color:#18B0C0;"/> Permata
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="va_MANDIRI" style="accent-color:#18B0C0;"/> Mandiri
             </label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
-              <input type="radio" name="va_bank" value="BJB" style="accent-color:#18B0C0;"/> BJB
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="va_PERMATA" style="accent-color:#18B0C0;"/> Permata
             </label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#0C1628;cursor:pointer;padding:4px 8px;border:1px solid #dce3ea;border-radius:6px;background:#fff;">
-              <input type="radio" name="va_bank" value="SAHABAT_SAMPOERNA" style="accent-color:#18B0C0;"/> Sampoerna
+            <label class="pm-opt" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dce3ea;border-radius:8px;cursor:pointer;font-size:12px;color:#0C1628;font-weight:500;transition:all .2s;">
+              <input type="radio" name="payment" value="va_SAHABAT_SAMPOERNA" style="accent-color:#18B0C0;"/> Sampoerna
             </label>
           </div>
         </div>
@@ -265,21 +283,6 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
             <div style="width:20px;height:20px;border-radius:50%;background:rgba(0,74,82,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#0A4A52;">3</div>
             <div style="font-size:12px;color:#1a2940;line-height:1.6;">Ada masalah? Hubungi CS: <a href="https://t.me/ETCIndicator" style="color:#18B0C0;font-weight:700;text-decoration:none;">@ETCIndicator di Telegram</a></div>
           </div>
-        </div>
-
-        <div style="margin-bottom:18px;">
-          <label style="font-size:11px;font-weight:600;color:#4A7080;display:block;margin-bottom:8px;">Kode Promo (opsional)</label>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="f-promo" placeholder="Masukkan kode promo"
-              oninput="this.value=this.value.toUpperCase()"
-              style="flex:1;padding:10px 14px;border:1px solid #dce3ea;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:#0C1628;"
-              onfocus="this.style.borderColor='#18B0C0'" onblur="this.style.borderColor='#dce3ea'"/>
-            <button type="button" onclick="applyPromo()" id="promo-btn"
-              style="background:rgba(0,200,215,.1);border:1px solid rgba(0,200,215,.3);padding:10px 16px;border-radius:8px;color:#18B0C0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">
-              APPLY
-            </button>
-          </div>
-          <div id="promo-result" style="display:none;margin-top:6px;font-size:12px;padding:8px 12px;border-radius:6px;"></div>
         </div>
 
         <button class="co-btn" id="submit-btn" onclick="submitOrder()" style="margin-top:0;">Bayar Sekarang — Rp 788.888</button>
@@ -402,13 +405,9 @@ var PRICE_AMOUNT = 788888;
 var urlParams = new URLSearchParams(window.location.search);
 var refCode = urlParams.get('ref') || null;
 
+// Highlight selected payment option
 document.querySelectorAll('input[name="payment"]').forEach(function(radio) {
   radio.addEventListener('change', function() {
-    if (this.value !== 'va') {
-      document.getElementById('va-options').style.display = 'none';
-    } else {
-      document.getElementById('va-options').style.display = 'flex';
-    }
     document.querySelectorAll('.pm-opt').forEach(function(el) {
       el.style.borderColor = '#dce3ea';
       el.style.background = '#fff';
@@ -454,14 +453,11 @@ async function submitOrder() {
     return;
   }
 
+  var payment_method = payment;
   var sub_payment_method = null;
-  if (payment === 'va') {
-    var vaEl = document.querySelector('input[name="va_bank"]:checked');
-    if (!vaEl) {
-      showCheckoutAlert('Pilih bank untuk Virtual Account', 'error');
-      return;
-    }
-    sub_payment_method = vaEl.value;
+  if (payment && payment.startsWith('va_')) {
+    payment_method = 'va';
+    sub_payment_method = payment.replace('va_', '');
   }
 
   var btn = document.getElementById('submit-btn');
@@ -483,7 +479,7 @@ async function submitOrder() {
       customer_name: name,
       customer_email: email,
       customer_phone: phone,
-      payment_method: payment
+      payment_method: payment_method
     };
     if (sub_payment_method) body.sub_payment_method = sub_payment_method;
     if (refCode) body.ref_code = refCode;
