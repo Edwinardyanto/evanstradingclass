@@ -323,6 +323,7 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     <div class="nav-tab" onclick="showPage('grant')">Manual Grant</div>
     <div class="nav-tab" onclick="showPage('affiliates')">Affiliates</div>
     <div class="nav-tab" onclick="showPage('traffic')">Traffic</div>
+    <div class="nav-tab" onclick="showPage('promo')">Promo</div>
   </div>
   <div class="nav-right">
     <span id="auth-status">not connected</span>
@@ -413,11 +414,13 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
           <thead><tr>
             <th>Product Name</th>
             <th class="hide-mobile">Durasi</th>
+            <th class="hide-mobile">Variant</th>
+            <th class="hide-mobile">Harga</th>
             <th class="hide-mobile">Checkout URL</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr></thead>
-          <tbody id="products-table"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
+          <tbody id="products-table"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -632,6 +635,90 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     </div>
   </div>
 
+  <!-- ───── PAGE: PROMO ───── -->
+  <div class="page" id="page-promo">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2 style="margin:0;font-size:18px;letter-spacing:1.5px;">PROMO CODES</h2>
+        <p style="margin:4px 0 0;font-size:12px;color:var(--muted);">Kelola kode promo untuk diskon checkout</p>
+      </div>
+      <button class="btn btn-primary" onclick="openPromoModal()">+ Create Promo</button>
+    </div>
+
+    <div id="alert-promo" class="alert"></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>CODE</th>
+          <th>TYPE</th>
+          <th>VALUE</th>
+          <th>USED/MAX</th>
+          <th class="hide-mobile">VALID UNTIL</th>
+          <th class="hide-mobile">PRODUCTS</th>
+          <th>STATUS</th>
+          <th>AKSI</th>
+        </tr></thead>
+        <tbody id="promo-tbody"><tr><td colspan="8" class="empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: Promo Code -->
+<div class="modal-overlay" id="promo-modal" style="display:none;">
+  <div class="modal" style="width:520px;">
+    <h3 id="promo-modal-title">CREATE PROMO CODE</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Promo Code *</label>
+        <input type="text" id="pm-code" placeholder="contoh: DISKON20" oninput="this.value=this.value.toUpperCase()"
+          style="font-family:'JetBrains Mono',monospace;text-transform:uppercase;"/>
+      </div>
+    </div>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label>Discount Type *</label>
+        <select id="pm-type" onchange="updatePromoValueLabel()" style="font-size:13px;padding:8px 10px;">
+          <option value="percentage">Percentage (%)</option>
+          <option value="fixed">Fixed (Rp)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label id="promo-value-label">Discount Value (%)</label>
+        <input type="number" id="pm-value" placeholder="e.g. 20" min="1" step="any"/>
+      </div>
+    </div>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label>Max Uses</label>
+        <input type="number" id="pm-maxuses" placeholder="Unlimited" min="1"/>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Kosongkan = unlimited</div>
+      </div>
+      <div class="form-group">
+        <label>Valid Until</label>
+        <input type="datetime-local" id="pm-valid-until" style="font-size:12px;"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Applicable Products</label>
+        <input type="text" id="pm-products" placeholder="Kosongkan = semua produk" style="font-size:12px;"/>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Pisahkan dengan koma. Contoh: ETCPremiumIndikator-Basic,ETCPremiumIndikator-Silver</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="pm-active" checked/>
+        <span style="font-size:13px;">Active</span>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closePromoModal()">Batal</button>
+      <button class="btn btn-primary" onclick="savePromo()">Simpan</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: Add/Edit Product -->
@@ -650,6 +737,20 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
       <div class="form-group">
         <label>Durasi (bulan) — kosongkan untuk Lifetime</label>
         <input type="number" id="product-months" placeholder="1" min="1"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Scalev Variant ID</label>
+        <input type="text" id="pm-variant-id" placeholder="variant_xxxx..." style="font-family:'JetBrains Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Variant unique ID dari Scalev dashboard. Wajib diisi agar checkout bisa berjalan.</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Harga (Rupiah)</label>
+        <input type="number" id="pm-price" placeholder="288888" min="0"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Isi harga aktual. Digunakan untuk kalkulasi diskon promo.</div>
       </div>
     </div>
     <div class="form-row">
@@ -815,13 +916,14 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  const tabs = { dashboard:0, products:1, subscribers:2, transactions:3, grant:4, affiliates:5, traffic:6 };
+  const tabs = { dashboard:0, products:1, subscribers:2, transactions:3, grant:4, affiliates:5, traffic:6, promo:7 };
   document.querySelectorAll('.nav-tab')[tabs[name]]?.classList.add('active');
   if (name === 'products')     loadProducts();
   if (name === 'subscribers')  loadSubscribers();
   if (name === 'transactions') loadTransactions();
   if (name === 'affiliates')   loadAffiliates();
   if (name === 'traffic')      loadAdminTraffic();
+  if (name === 'promo')        loadPromos();
 
   // Sync admin bottom nav
   document.querySelectorAll('.admin-bottom-nav-item').forEach(t => {
@@ -889,13 +991,25 @@ async function loadDashboard() {
 }
 
 // ── Products ──────────────────────────────────────────────────────
+var allProducts = []; // cache for promo tab product list
+
 async function loadProducts() {
   try {
     const { products } = await api('GET', '/admin/products');
+    allProducts = products;
     document.getElementById('products-table').innerHTML = products.length
-      ? products.map(p => `<tr>
+      ? products.map(p => {
+          const variantShort = p.scalev_variant_id
+            ? (p.scalev_variant_id.length > 15 ? p.scalev_variant_id.slice(0,12) + '...' : p.scalev_variant_id)
+            : '<span style="color:var(--border)">—</span>';
+          const priceStr = p.price && parseInt(p.price) > 0
+            ? 'Rp ' + parseInt(p.price).toLocaleString('id-ID')
+            : '<span style="color:var(--border)">—</span>';
+          return `<tr>
           <td><strong>${p.product_name}</strong></td>
           <td class="hide-mobile">${p.months ? p.months + ' bulan' : '<span style="color:var(--gold)">Lifetime</span>'}</td>
+          <td class="hide-mobile" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);">${variantShort}</td>
+          <td class="hide-mobile mono" style="font-size:12px;">${priceStr}</td>
           <td class="hide-mobile" style="font-size:11px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.checkout_url || '<span style="color:var(--border)">—</span>'}</td>
           <td>
             <label class="toggle">
@@ -904,11 +1018,12 @@ async function loadProducts() {
             </label>
           </td>
           <td>
-            <button class="btn btn-ghost btn-sm" onclick="editProduct(${p.id}, \`${p.product_name.replace(/`/g,"'")}\`, ${p.months || ''}, \`${(p.checkout_url||'').replace(/`/g,"'")}\`)">Edit</button>
+            <button class="btn btn-ghost btn-sm" onclick='editProduct(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Edit</button>
             <button class="btn btn-danger btn-sm" style="margin-left:6px" onclick="deleteProduct(${p.id})">Hapus</button>
           </td>
-        </tr>`).join('')
-      : '<tr><td colspan="5" class="empty">Belum ada produk terdaftar</td></tr>';
+        </tr>`;
+        }).join('')
+      : '<tr><td colspan="7" class="empty">Belum ada produk terdaftar</td></tr>';
   } catch(e) { showAlert('products', e.message, 'error'); }
 }
 
@@ -916,16 +1031,20 @@ function openProductModal() {
   document.getElementById('product-id').value = '';
   document.getElementById('product-name').value = '';
   document.getElementById('product-months').value = '';
+  document.getElementById('pm-variant-id').value = '';
+  document.getElementById('pm-price').value = '';
   document.getElementById('product-checkout-url').value = '';
   document.getElementById('product-modal-title').textContent = 'TAMBAH PRODUK';
   document.getElementById('product-modal').classList.add('open');
 }
 
-function editProduct(id, name, months, checkoutUrl) {
-  document.getElementById('product-id').value = id;
-  document.getElementById('product-name').value = name;
-  document.getElementById('product-months').value = months || '';
-  document.getElementById('product-checkout-url').value = checkoutUrl || '';
+function editProduct(p) {
+  document.getElementById('product-id').value = p.id;
+  document.getElementById('product-name').value = p.product_name || '';
+  document.getElementById('product-months').value = p.months || '';
+  document.getElementById('pm-variant-id').value = p.scalev_variant_id || '';
+  document.getElementById('pm-price').value = p.price && parseInt(p.price) > 0 ? parseInt(p.price) : '';
+  document.getElementById('product-checkout-url').value = p.checkout_url || '';
   document.getElementById('product-modal-title').textContent = 'EDIT PRODUK';
   document.getElementById('product-modal').classList.add('open');
 }
@@ -938,13 +1057,17 @@ async function saveProduct() {
   const id          = document.getElementById('product-id').value;
   const name        = document.getElementById('product-name').value.trim();
   const months      = document.getElementById('product-months').value;
+  const variantId   = document.getElementById('pm-variant-id').value.trim();
+  const price       = document.getElementById('pm-price').value;
   const checkoutUrl = document.getElementById('product-checkout-url').value.trim();
   if (!name) return showAlert('products', 'Product name wajib diisi', 'error');
   try {
     const body = {
       product_name: name,
       months: months || null,
-      checkout_url: checkoutUrl || null
+      checkout_url: checkoutUrl || null,
+      scalev_variant_id: variantId || null,
+      price: price ? parseInt(price) : 0
     };
     if (id) {
       await api('PUT', `/admin/products/${id}`, body);
@@ -1461,6 +1584,121 @@ function closeTrafficDetail() {
   document.getElementById('traffic-summary-view').style.display = '';
 }
 
+// ── Promo Codes ─────────────────────────────────────────────────
+let currentEditPromoId = null;
+
+function updatePromoValueLabel() {
+  const type = document.getElementById('pm-type').value;
+  document.getElementById('promo-value-label').textContent = type === 'percentage' ? 'Discount Value (%)' : 'Discount Value (Rp)';
+}
+
+function openPromoModal(promo) {
+  currentEditPromoId = promo ? promo.id : null;
+  document.getElementById('promo-modal-title').textContent = promo ? 'EDIT PROMO CODE' : 'CREATE PROMO CODE';
+  document.getElementById('pm-code').value = promo ? promo.code : '';
+  document.getElementById('pm-code').disabled = !!promo;
+  document.getElementById('pm-type').value = promo ? promo.discount_type : 'percentage';
+  document.getElementById('pm-value').value = promo ? promo.discount_value : '';
+  document.getElementById('pm-maxuses').value = promo ? (promo.max_uses || '') : '';
+  document.getElementById('pm-valid-until').value = promo && promo.valid_until ? promo.valid_until.slice(0,16) : '';
+  document.getElementById('pm-products').value = promo && promo.applicable_products ? promo.applicable_products.join(',') : '';
+  document.getElementById('pm-active').checked = promo ? promo.is_active : true;
+  updatePromoValueLabel();
+  document.getElementById('promo-modal').style.display = 'flex';
+}
+
+function closePromoModal() { document.getElementById('promo-modal').style.display = 'none'; }
+
+async function loadPromos() {
+  const tbody = document.getElementById('promo-tbody');
+  tbody.innerHTML = '<tr><td colspan="8" class="empty">Loading...</td></tr>';
+  try {
+    const { promo_codes } = await api('GET', '/admin/promo-codes');
+    if (!promo_codes.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">Belum ada promo code</td></tr>';
+      return;
+    }
+    tbody.innerHTML = promo_codes.map(p => {
+      const valStr = p.discount_type === 'percentage'
+        ? parseFloat(p.discount_value) + '%'
+        : 'Rp ' + parseInt(p.discount_value).toLocaleString('id-ID');
+      const usedStr = (p.used_count || 0) + '/' + (p.max_uses || '∞');
+      const untilStr = p.valid_until ? fmtDate(p.valid_until) : '—';
+      const productsStr = p.applicable_products && p.applicable_products.length
+        ? p.applicable_products.map(x => '<span class="badge badge-muted" style="font-size:9px;margin:1px;">' + x + '</span>').join('')
+        : '<span style="font-size:11px;color:var(--muted);">Semua</span>';
+      const statusBadge = p.is_active
+        ? '<span class="badge" style="background:rgba(74,222,128,.15);color:var(--green);font-size:10px;">Active</span>'
+        : '<span class="badge badge-muted" style="font-size:10px;">Inactive</span>';
+      const safePromo = JSON.stringify(p).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+      return `<tr>
+        <td><span class="badge badge-cyan" style="font-family:'JetBrains Mono',monospace;font-size:11px;">${p.code}</span></td>
+        <td style="font-size:12px;">${p.discount_type}</td>
+        <td class="mono" style="font-size:12px;">${valStr}</td>
+        <td class="mono" style="font-size:12px;">${usedStr}</td>
+        <td class="hide-mobile" style="font-size:11px;color:var(--muted);">${untilStr}</td>
+        <td class="hide-mobile">${productsStr}</td>
+        <td>${statusBadge}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-ghost btn-sm" onclick='openPromoModal(JSON.parse(this.dataset.p))' data-p="${safePromo}">Edit</button>
+          <button class="btn btn-danger btn-sm" style="margin-left:4px;" onclick="deletePromo('${p.id}')">Hapus</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    showAlert('promo', e.message, 'error');
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>';
+  }
+}
+
+async function savePromo() {
+  const code = document.getElementById('pm-code').value.trim();
+  const discount_type = document.getElementById('pm-type').value;
+  const discount_value = document.getElementById('pm-value').value;
+  const max_uses = document.getElementById('pm-maxuses').value;
+  const valid_until = document.getElementById('pm-valid-until').value;
+  const productsRaw = document.getElementById('pm-products').value.trim();
+  const is_active = document.getElementById('pm-active').checked;
+
+  if (!currentEditPromoId && !code) return showAlert('promo', 'Code wajib diisi', 'error');
+  if (!discount_type || !discount_value) return showAlert('promo', 'Type dan Value wajib diisi', 'error');
+
+  const applicable_products = productsRaw ? productsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  try {
+    const body = {
+      discount_type,
+      discount_value: parseFloat(discount_value),
+      max_uses: max_uses ? parseInt(max_uses) : null,
+      valid_until: valid_until || null,
+      is_active,
+      applicable_products
+    };
+    if (currentEditPromoId) {
+      await api('PATCH', `/admin/promo-codes/${currentEditPromoId}`, body);
+    } else {
+      body.code = code;
+      await api('POST', '/admin/promo-codes', body);
+    }
+    closePromoModal();
+    showAlert('promo', 'Promo code berhasil disimpan', 'success');
+    loadPromos();
+  } catch (e) {
+    showAlert('promo', e.message, 'error');
+  }
+}
+
+async function deletePromo(id) {
+  if (!confirm('Hapus promo code ini?')) return;
+  try {
+    await api('DELETE', `/admin/promo-codes/${id}`);
+    showAlert('promo', 'Promo code dihapus', 'success');
+    loadPromos();
+  } catch (e) {
+    showAlert('promo', e.message, 'error');
+  }
+}
+
 async function saveMasterSetting() {
   if (!currentAffiliateId) return;
   const affiliate_type = document.getElementById('aff-edit-type').value;
@@ -1531,6 +1769,9 @@ document.getElementById('product-modal').addEventListener('click', function(e) {
 });
 document.getElementById('affiliate-modal').addEventListener('click', function(e) {
   if (e.target === this) closeAffiliateModal();
+});
+document.getElementById('promo-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePromoModal();
 });
 const editModal = document.getElementById('edit-username-modal');
 if (editModal) {
@@ -1656,6 +1897,13 @@ async function saveAndRetry() {
       <line x1="6" y1="20" x2="6" y2="14"/>
     </svg>
     Traffic
+  </div>
+  <div class="admin-bottom-nav-item" onclick="showPage('promo')" data-page="promo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+      <line x1="7" y1="7" x2="7.01" y2="7"/>
+    </svg>
+    Promo
   </div>
   <div class="admin-bottom-nav-item" onclick="showPage('grant')" data-page="grant">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

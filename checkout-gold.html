@@ -148,6 +148,7 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
     <div class="co-breakdown">
       <h4>Rincian Harga</h4>
       <div class="co-row"><span>Total tagihan</span><span style="color:var(--white);font-family:JetBrains Mono,monospace">Rp 1.188.888</span></div><div class="co-row"><span>Durasi akses</span><span style="color:var(--white);font-family:JetBrains Mono,monospace">6 bulan</span></div><div class="co-row"><span>Per bulan</span><span style="color:var(--white);font-family:JetBrains Mono,monospace">≈ Rp 198.148</span></div><div class="co-row total"><span>Per hari</span><span style="color:var(--white);font-family:JetBrains Mono,monospace">≈ Rp 6.605</span></div>
+      <div class="co-row" id="promo-row" style="display:none;"><span style="color:#22c55e;">🎟️ Promo</span><span id="promo-discount-val" style="color:#22c55e;font-family:JetBrains Mono,monospace;font-weight:700;"></span></div>
     </div>
 
     <div class="trust-row">
@@ -266,6 +267,21 @@ footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;align-i
           </div>
         </div>
 
+        <div style="margin-bottom:18px;">
+          <label style="font-size:11px;font-weight:600;color:#4A7080;display:block;margin-bottom:8px;">Kode Promo (opsional)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="f-promo" placeholder="Masukkan kode promo"
+              oninput="this.value=this.value.toUpperCase()"
+              style="flex:1;padding:10px 14px;border:1px solid #dce3ea;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:#0C1628;"
+              onfocus="this.style.borderColor='#18B0C0'" onblur="this.style.borderColor='#dce3ea'"/>
+            <button type="button" onclick="applyPromo()" id="promo-btn"
+              style="background:rgba(0,200,215,.1);border:1px solid rgba(0,200,215,.3);padding:10px 16px;border-radius:8px;color:#18B0C0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">
+              APPLY
+            </button>
+          </div>
+          <div id="promo-result" style="display:none;margin-top:6px;font-size:12px;padding:8px 12px;border-radius:6px;"></div>
+        </div>
+
         <button class="co-btn" id="submit-btn" onclick="submitOrder()" style="margin-top:0;">Bayar Sekarang — Rp 1.188.888</button>
       </div>
     </div>
@@ -366,8 +382,22 @@ document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
 
 // ── Checkout Logic ────────────────────────────────────────────────
 var API = 'https://etc-tv-server-production.up.railway.app';
-var PRODUCT_KEY = 'gold';
-var PRICE_LABEL = 'Rp 1.188.888';
+var PRICE_LABEL = 'Bayar Sekarang — Rp 1.188.888';
+var PRICE_AMOUNT = 1188888;
+(function(){
+  var currentPage = window.location.pathname.split('/').pop();
+  fetch(API + '/products').then(function(r){ return r.json(); }).then(function(data){
+    var match = data.products.find(function(p){
+      return p.checkout_url && p.checkout_url.indexOf(currentPage) !== -1;
+    });
+    if (match) {
+      window._productName = match.product_name;
+      if (match.price && parseInt(match.price) > 0) {
+        PRICE_AMOUNT = parseInt(match.price);
+      }
+    }
+  }).catch(function(){});
+})();
 
 var urlParams = new URLSearchParams(window.location.search);
 var refCode = urlParams.get('ref') || null;
@@ -440,9 +470,15 @@ async function submitOrder() {
   btn.style.opacity = '0.6';
   document.getElementById('checkout-alert').style.display = 'none';
 
+  if (!window._productName) {
+    showCheckoutAlert('Produk tidak ditemukan. Refresh halaman dan coba lagi.', 'error');
+    btn.disabled = false; btn.textContent = PRICE_LABEL; btn.style.opacity = '1';
+    return;
+  }
+
   try {
     var body = {
-      product: PRODUCT_KEY,
+      product_name: window._productName,
       tv_username: tvuser,
       customer_name: name,
       customer_email: email,
@@ -451,6 +487,7 @@ async function submitOrder() {
     };
     if (sub_payment_method) body.sub_payment_method = sub_payment_method;
     if (refCode) body.ref_code = refCode;
+    if (_promoValid && _promoCode) body.promo_code = _promoCode;
 
     var res = await fetch(API + '/checkout/create-order', {
       method: 'POST',
@@ -471,10 +508,101 @@ async function submitOrder() {
   } catch (err) {
     showCheckoutAlert(err.message, 'error');
     btn.disabled = false;
-    btn.textContent = 'Bayar Sekarang — ' + PRICE_LABEL;
+    btn.textContent = PRICE_LABEL;
     btn.style.opacity = '1';
   }
 }
+
+// ── Promo Code ──────────────────────────────────────────────────
+var _promoValid = false;
+var _promoCode = null;
+var _discountAmount = 0;
+
+function formatRupiah(a) { return 'Rp ' + a.toLocaleString('id-ID'); }
+
+function updatePriceDisplay(d) {
+  var promoRow = document.getElementById('promo-row');
+  var promoDiscVal = document.getElementById('promo-discount-val');
+  var btn = document.getElementById('submit-btn');
+  if (promoRow) promoRow.style.display = '';
+  if (promoDiscVal) promoDiscVal.textContent = '- ' + formatRupiah(d);
+  var finalPrice = PRICE_AMOUNT - d;
+  if (btn) btn.textContent = 'Bayar Sekarang — ' + formatRupiah(finalPrice);
+}
+
+function resetPriceDisplay() {
+  var promoRow = document.getElementById('promo-row');
+  var btn = document.getElementById('submit-btn');
+  if (promoRow) promoRow.style.display = 'none';
+  if (btn) btn.textContent = PRICE_LABEL;
+}
+
+async function applyPromo() {
+  var code = document.getElementById('f-promo').value.trim();
+  var promoResult = document.getElementById('promo-result');
+  var promoBtn = document.getElementById('promo-btn');
+  if (!code) {
+    promoResult.style.display = 'none';
+    _promoValid = false; _promoCode = null; _discountAmount = 0;
+    resetPriceDisplay(); return;
+  }
+  promoBtn.textContent = '...'; promoBtn.disabled = true;
+  try {
+    var res = await fetch(API + '/promo/validate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, product_name: window._productName || '' })
+    });
+    var data = await res.json();
+    if (data.valid) {
+      var discount = 0;
+      if (data.discount_type === 'percentage') {
+        discount = Math.floor(PRICE_AMOUNT * data.discount_value / 100);
+      } else {
+        discount = Math.floor(data.discount_value);
+      }
+      discount = Math.min(discount, PRICE_AMOUNT);
+      _promoValid = true; _promoCode = code; _discountAmount = discount;
+      promoResult.style.display = 'block';
+      promoResult.style.background = 'rgba(34,197,94,.08)';
+      promoResult.style.border = '1px solid rgba(34,197,94,.2)';
+      promoResult.style.color = '#16a34a';
+      promoResult.textContent = '✅ ' + data.message + ' — hemat ' + formatRupiah(discount) + '!';
+      updatePriceDisplay(discount);
+    } else {
+      _promoValid = false; _promoCode = null; _discountAmount = 0;
+      resetPriceDisplay();
+      promoResult.style.display = 'block';
+      promoResult.style.background = 'rgba(255,68,68,.08)';
+      promoResult.style.border = '1px solid rgba(255,68,68,.2)';
+      promoResult.style.color = '#CC3333';
+      promoResult.textContent = '❌ ' + (data.reason || 'Kode promo tidak valid');
+    }
+  } catch (err) {
+    promoResult.style.display = 'block';
+    promoResult.style.background = 'rgba(255,68,68,.08)';
+    promoResult.style.border = '1px solid rgba(255,68,68,.2)';
+    promoResult.style.color = '#CC3333';
+    promoResult.textContent = '❌ Gagal memvalidasi kode promo';
+    _promoValid = false; _promoCode = null; _discountAmount = 0;
+    resetPriceDisplay();
+  } finally {
+    promoBtn.textContent = 'APPLY'; promoBtn.disabled = false;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var pi = document.getElementById('f-promo');
+  if (pi) {
+    pi.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); applyPromo(); } });
+    pi.addEventListener('input', function() {
+      if (!this.value.trim()) {
+        document.getElementById('promo-result').style.display = 'none';
+        _promoValid = false; _promoCode = null; _discountAmount = 0;
+        resetPriceDisplay();
+      }
+    });
+  }
+});
 </script>
 
 </body>
