@@ -496,16 +496,6 @@ async function submitOrder() {
       throw new Error(data.error || 'Gagal membuat order');
     }
 
-    // Fire form_fill tracking — user successfully submitted the checkout form
-    if (refCode) {
-      var formFillKey = 'etc_tracked_form_fill_' + refCode;
-      if (!sessionStorage.getItem(formFillKey)) {
-        sessionStorage.setItem(formFillKey, '1');
-        fetch(API + '/track?ref=' + encodeURIComponent(refCode) + '&page=form_fill',
-          { method: 'GET', credentials: 'include' }).catch(function() {});
-      }
-    }
-
     showCheckoutAlert('Order berhasil! Mengalihkan ke halaman pembayaran...', 'success');
     setTimeout(function() {
       window.location.href = data.payment_url;
