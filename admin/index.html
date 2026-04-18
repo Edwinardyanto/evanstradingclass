@@ -740,8 +740,10 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     <div class="form-row">
       <div class="form-group">
         <label>Applicable Products</label>
-        <input type="text" id="pm-products" placeholder="Kosongkan = semua produk" style="font-size:12px;"/>
-        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Pisahkan dengan koma. Contoh: ETCPremiumIndikator-Basic,ETCPremiumIndikator-Silver</div>
+        <div id="pm-products" style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:160px;overflow-y:auto;">
+          <span style="font-size:11px;color:var(--muted);">Loading products...</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Kosongkan = berlaku untuk semua produk</div>
       </div>
     </div>
     <div class="form-row">
@@ -1641,7 +1643,7 @@ function updatePromoValueLabel() {
   document.getElementById('promo-value-label').textContent = type === 'percentage' ? 'Discount Value (%)' : 'Discount Value (Rp)';
 }
 
-function openPromoModal(promo) {
+async function openPromoModal(promo) {
   currentEditPromoId = promo ? promo.id : null;
   document.getElementById('promo-modal-title').textContent = promo ? 'EDIT PROMO CODE' : 'CREATE PROMO CODE';
   document.getElementById('pm-code').value = promo ? promo.code : '';
@@ -1650,9 +1652,33 @@ function openPromoModal(promo) {
   document.getElementById('pm-value').value = promo ? promo.discount_value : '';
   document.getElementById('pm-maxuses').value = promo ? (promo.max_uses || '') : '';
   document.getElementById('pm-valid-until').value = promo && promo.valid_until ? promo.valid_until.slice(0,16) : '';
-  document.getElementById('pm-products').value = promo && promo.applicable_products ? promo.applicable_products.join(',') : '';
   document.getElementById('pm-active').checked = promo ? promo.is_active : true;
   updatePromoValueLabel();
+
+  // Load active products as checkboxes
+  const container = document.getElementById('pm-products');
+  container.innerHTML = '<span style="font-size:11px;color:var(--muted);">Loading products...</span>';
+  try {
+    const data = await api('GET', '/admin/products');
+    const products = (data.products || []).filter(p => p.is_active);
+    const selected = promo && promo.applicable_products ? promo.applicable_products.map(s => s.toUpperCase()) : [];
+    if (!products.length) {
+      container.innerHTML = '<span style="font-size:11px;color:var(--muted);">Tidak ada produk aktif</span>';
+    } else {
+      container.innerHTML = products.map(p => {
+        const checked = selected.includes(p.product_name.toUpperCase()) ? 'checked' : '';
+        const price = p.price ? 'Rp ' + parseInt(p.price).toLocaleString('id-ID') : '';
+        return '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;">' +
+          '<input type="checkbox" class="pm-product-cb" value="' + p.product_name + '" ' + checked + '/>' +
+          '<span style="font-size:12px;font-family:\'JetBrains Mono\',monospace;">' + p.product_name + '</span>' +
+          (price ? '<span style="font-size:10px;color:var(--muted);margin-left:auto;">' + price + '</span>' : '') +
+          '</label>';
+      }).join('');
+    }
+  } catch (e) {
+    container.innerHTML = '<span style="font-size:11px;color:var(--red);">Gagal memuat produk</span>';
+  }
+
   document.getElementById('promo-modal').style.display = 'flex';
 }
 
@@ -1706,13 +1732,12 @@ async function savePromo() {
   const discount_value = document.getElementById('pm-value').value;
   const max_uses = document.getElementById('pm-maxuses').value;
   const valid_until = document.getElementById('pm-valid-until').value;
-  const productsRaw = document.getElementById('pm-products').value.trim();
   const is_active = document.getElementById('pm-active').checked;
 
   if (!currentEditPromoId && !code) return showAlert('promo', 'Code wajib diisi', 'error');
   if (!discount_type || !discount_value) return showAlert('promo', 'Type dan Value wajib diisi', 'error');
 
-  const applicable_products = productsRaw ? productsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const applicable_products = Array.from(document.querySelectorAll('.pm-product-cb:checked')).map(cb => cb.value);
 
   try {
     const body = {
