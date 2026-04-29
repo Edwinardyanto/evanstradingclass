@@ -692,10 +692,6 @@ nav.legacy-nav { display: none !important; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Affiliates
     </div>
-    <div class="sidebar-item" data-page="traffic" onclick="showPage('traffic')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Traffic
-    </div>
 
     <div class="sidebar-section">Customers</div>
     <div class="sidebar-item" data-page="subscribers" onclick="showPage('subscribers')">
@@ -840,7 +836,7 @@ nav.legacy-nav { display: none !important; }
           <div><span class="cc-sw" style="background:#F5C842;border-radius:50%"></span>Orders · <span id="cc-legend-txcount">— order</span></div>
         </div>
       </div>
-      <!-- SOLD PRODUCTS placeholder (F4 will populate cc-donut + cc-mix-list) -->
+      <!-- SOLD PRODUCTS (Phase F4) -->
       <div class="cc-panel">
         <div class="cc-panel-head">
           <div>
@@ -848,9 +844,11 @@ nav.legacy-nav { display: none !important; }
             <div class="cc-panel-sub" id="cc-mix-sub">Last 30 days</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:18px;min-height:140px;">
-          <svg id="cc-donut" width="120" height="120" viewBox="0 0 120 120" aria-label="Sold Products"></svg>
-          <div id="cc-mix-list" class="cc-mix-list"><div style="color:var(--muted);font-size:12px;">Coming soon</div></div>
+        <div style="display:flex;align-items:center;gap:18px;min-height:160px;">
+          <div style="position:relative;width:160px;height:160px;flex-shrink:0;">
+            <canvas id="admin-chart-donut" width="280" height="280" role="img" aria-label="Sold Products"></canvas>
+          </div>
+          <div id="cc-mix-list" class="cc-mix-list" style="flex:1;"><div style="color:var(--muted);font-size:12px;">Loading...</div></div>
         </div>
       </div>
     </div>
@@ -1173,13 +1171,11 @@ nav.legacy-nav { display: none !important; }
         <div class="empty">Klik ↻ Refresh untuk memuat tree</div>
       </div>
     </div>
-  </div>
 
-  <!-- ───── PAGE: TRAFFIC ───── -->
-  <div class="page" id="page-traffic">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <!-- AFFILIATE TRAFFIC (Phase F7 — relocated from removed Traffic tab) -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:28px 0 16px;flex-wrap:wrap;gap:10px;">
       <div>
-        <h2 style="margin:0;font-size:18px;letter-spacing:1.5px;">AFFILIATE TRAFFIC</h2>
+        <h3 style="margin:0;font-size:14px;letter-spacing:1.5px;color:var(--muted);">AFFILIATE TRAFFIC</h3>
         <p style="margin:4px 0 0;font-size:12px;color:var(--muted);">Kunjungan, checkout, dan konversi semua affiliate</p>
       </div>
       <button class="btn btn-ghost btn-sm" onclick="loadAdminTraffic()">↻ Refresh</button>
@@ -1562,8 +1558,7 @@ function showPage(name) {
   if (name === 'subscribers')  loadSubscribers();
   if (name === 'transactions') loadTransactions();
   if (name === 'orders')       { populateOrderProductFilter(); loadAdminOrders(); }
-  if (name === 'affiliates')   loadAffiliates();
-  if (name === 'traffic')      loadAdminTraffic();
+  if (name === 'affiliates')   { loadAffiliates(); loadAdminTraffic(); }
   if (name === 'promo')        loadPromos();
 }
 
@@ -1941,7 +1936,108 @@ function _adminFmtRpShort(v) {
 function _adminFmtRpFull(v) { return 'Rp ' + Math.round(v).toLocaleString('id-ID'); }
 
 async function loadAdminCharts() {
-  await Promise.all([loadAdminIncomeChart(), loadAdminFunnelChart()]);
+  await Promise.all([loadAdminIncomeChart(), loadAdminFunnelChart(), loadAdminSoldProductsDonut()]);
+}
+
+// ── Sold Products donut (Phase F4) ────────────────────────────────
+// Client-side groupBy on /admin/transactions, filtered to paid/settled
+// orders inside the current _adminRange window. Aggregates revenue per
+// product_name, renders Chart.js doughnut + legend with %/Rp breakdown.
+// ETC palette derivatives: cyan + cyan2 + lifetime-purple + gold +
+// muted gray. Number() coercion on amount per BIGINT serialization rule.
+let _adminChartDonut = null;
+async function loadAdminSoldProductsDonut() {
+  try {
+    const txs = await api('GET', '/admin/transactions');
+    const transactions = txs.transactions || [];
+    const { days, offset, label } = _adminRange;
+
+    const subEl = document.getElementById('cc-mix-sub');
+    if (subEl) subEl.textContent = label;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const to = new Date(today);
+    to.setDate(to.getDate() - offset);
+    to.setHours(23, 59, 59, 999);
+    const from = new Date(to);
+    from.setHours(0, 0, 0, 0);
+    from.setDate(from.getDate() - (days - 1));
+    const fromMs = from.getTime();
+    const toMs   = to.getTime();
+
+    const mix = {};
+    transactions.forEach(t => {
+      if (t.payment_status !== 'paid' && t.payment_status !== 'settled') return;
+      const ts = t.created_at ? new Date(t.created_at).getTime() : NaN;
+      if (!Number.isFinite(ts)) return;
+      if (ts < fromMs || ts > toMs) return;
+      const name = t.product_name || 'Other';
+      mix[name] = (mix[name] || 0) + Number(t.amount || 0);
+    });
+
+    const mixArr = Object.entries(mix).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const total  = mixArr.reduce((s, [, v]) => s + v, 0);
+    const palette = ['#00C8D7', '#18B0C0', '#C084FC', '#F5C842', '#6B7280'];
+
+    const canvas = document.getElementById('admin-chart-donut');
+    const listEl = document.getElementById('cc-mix-list');
+    if (!canvas || !listEl) return;
+
+    if (_adminChartDonut) { _adminChartDonut.destroy(); _adminChartDonut = null; }
+
+    if (total === 0) {
+      const ctxEmpty = canvas.getContext('2d');
+      ctxEmpty.clearRect(0, 0, canvas.width, canvas.height);
+      _adminChartDonut = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['No data'], datasets: [{ data: [1], backgroundColor: ['#1F2933'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+      });
+      listEl.innerHTML = `<div style="color:var(--muted);font-size:12px;">No paid orders for ${label.toLowerCase()}.</div>`;
+      return;
+    }
+
+    _adminChartDonut = new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: mixArr.map(([name]) => name),
+        datasets: [{
+          data: mixArr.map(([, v]) => v),
+          backgroundColor: mixArr.map((_, i) => palette[i] || '#6B7280'),
+          borderColor: 'transparent',
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (item) => `${item.label}: Rp ${Math.round(Number(item.parsed) || 0).toLocaleString('id-ID')}`
+            }
+          }
+        }
+      }
+    });
+
+    listEl.innerHTML = mixArr.map(([name, value], i) => {
+      const pct = Math.round(value / total * 100);
+      const rp  = 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
+      const swatch = palette[i] || '#6B7280';
+      return `
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+          <span style="width:8px;height:8px;background:${swatch};border-radius:2px;flex-shrink:0;"></span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:11px;">${rp}</span>
+          <span style="font-weight:600;width:36px;text-align:right;">${pct}%</span>
+        </div>`;
+    }).join('');
+  } catch (e) { console.error('loadAdminSoldProductsDonut error:', e); }
 }
 
 // ── Orders tab (Phase C2 PR3) ────────────────────────────────────
