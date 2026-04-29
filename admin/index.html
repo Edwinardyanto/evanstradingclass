@@ -310,6 +310,97 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
   }
 }
 
+/* ─── Dashboard hero + action tiles (Phase C2 PR2) ─────────── */
+.cc-hero {
+  background: var(--card); color: var(--white);
+  border-radius: 16px; padding: 28px; margin-bottom: 16px;
+  position: relative; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.cc-hero-spark {
+  position: absolute; right: 0; top: 0; height: 100%; width: 70%;
+  opacity: 0.5; pointer-events: none;
+}
+.cc-hero-grid {
+  position: relative; display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 32px;
+}
+.cc-hero-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted); font-weight: 600; margin-bottom: 10px;
+}
+.cc-hero-label-dim { color: var(--muted); }
+.cc-hero-val {
+  font-size: 48px; font-weight: 700; letter-spacing: -0.03em;
+  line-height: 1; margin-bottom: 10px; color: var(--white);
+}
+.cc-hero-mini {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--white);
+}
+.cc-hero-mini-unit { font-size: 20px; color: var(--muted); margin-left: 2px; }
+.cc-hero-note { font-size: 13px; color: var(--muted); }
+.cc-hero-note-dim  { color: var(--muted); margin-top: 4px; }
+.cc-hero-note-ok   { color: #6EE7B7; margin-top: 4px; font-size: 12px; }
+.cc-hero-note-warn { color: #FCD34D; margin-top: 4px; font-size: 12px; }
+.cc-pill-ok {
+  display: inline-flex; align-items: center; padding: 3px 10px;
+  border-radius: 999px; background: #059669; color: #fff;
+  font-size: 12px; font-weight: 600;
+}
+.cc-pill-bad {
+  display: inline-flex; align-items: center; padding: 3px 10px;
+  border-radius: 999px; background: #B91C1C; color: #fff;
+  font-size: 12px; font-weight: 600;
+}
+@media (max-width: 900px) {
+  .cc-hero-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+  .cc-hero-val  { font-size: 36px; }
+  .cc-hero-mini { font-size: 22px; }
+}
+
+.cc-actions {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px; margin-bottom: 14px;
+}
+.cc-act {
+  border-radius: 12px; padding: 16px; display: flex; gap: 12px;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: transform .15s;
+}
+.cc-act:hover { transform: translateY(-1px); }
+.cc-act-red     { background: rgba(220,38,38,.15);  border: 1px solid rgba(220,38,38,.35); }
+.cc-act-amber   { background: rgba(217,119,6,.15);  border: 1px solid rgba(217,119,6,.35); }
+.cc-act-emerald { background: rgba(5,150,105,.15);  border: 1px solid rgba(5,150,105,.35); }
+.cc-act-badge {
+  position: absolute; top: 12px; right: 12px;
+  font-size: 10px; font-weight: 700; color: #fff;
+  padding: 2px 8px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.cc-act-badge-red     { background: #DC2626; }
+.cc-act-badge-amber   { background: #D97706; }
+.cc-act-badge-emerald { background: #059669; }
+.cc-act-icon {
+  width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,.06);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.cc-act-icon-red     { color: #FCA5A5; }
+.cc-act-icon-amber   { color: #FCD34D; }
+.cc-act-icon-emerald { color: #6EE7B7; }
+.cc-act-head { font-size: 12px; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.02em; }
+.cc-act-red     .cc-act-head, .cc-act-red     p { color: #FECACA; }
+.cc-act-amber   .cc-act-head, .cc-act-amber   p { color: #FDE68A; }
+.cc-act-emerald .cc-act-head, .cc-act-emerald p { color: #A7F3D0; }
+.cc-act p { font-size: 13px; line-height: 1.5; margin: 0; }
+.cc-act-cta { font-size: 12px; font-weight: 700; margin-top: 8px; }
+.cc-act-cta-red     { color: #FCA5A5; }
+.cc-act-cta-amber   { color: #FCD34D; }
+.cc-act-cta-emerald { color: #6EE7B7; }
+@media (max-width: 900px) {
+  .cc-actions { grid-template-columns: 1fr; }
+}
+
 /* ─── Dashboard charts (cc-* panels) ───────────────────────── */
 .cc-panel {
   background: var(--card); border: 1px solid var(--border);
@@ -383,11 +474,82 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
 
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-card"><div class="stat-label">Total Subscribers</div><div class="stat-value" id="stat-subs">—</div><div class="stat-sub">terdaftar</div></div>
-      <div class="stat-card"><div class="stat-label">Active Subscribers</div><div class="stat-value" id="stat-active">—</div><div class="stat-sub">akses aktif</div></div>
-      <div class="stat-card"><div class="stat-label">Total Transaksi</div><div class="stat-value" id="stat-txs">—</div><div class="stat-sub">orders</div></div>
-      <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" id="stat-rev" style="font-size:24px">—</div><div class="stat-sub">net</div></div>
+    <!-- HERO REVENUE (Phase C2 PR2) -->
+    <div class="cc-hero">
+      <svg class="cc-hero-spark" viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="cc-hero-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#00C8D7" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#00C8D7" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path id="cc-hero-area" fill="url(#cc-hero-grad)"/>
+        <path id="cc-hero-line" stroke="#00C8D7" stroke-width="2" fill="none"/>
+      </svg>
+      <div class="cc-hero-grid">
+        <div>
+          <div class="cc-hero-label">Revenue · 30 hari terakhir</div>
+          <div class="cc-hero-val" id="cc-rev">Rp —</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="cc-pill-ok" id="cc-rev-delta">↑ —</span>
+            <span class="cc-hero-note" id="cc-rev-target"></span>
+          </div>
+        </div>
+        <div>
+          <div class="cc-hero-label cc-hero-label-dim">Transaksi</div>
+          <div class="cc-hero-mini" id="cc-tx">—</div>
+          <div class="cc-hero-note cc-hero-note-ok" id="cc-tx-delta">—</div>
+        </div>
+        <div>
+          <div class="cc-hero-label cc-hero-label-dim">AOV</div>
+          <div class="cc-hero-mini" id="cc-aov">Rp —</div>
+          <div class="cc-hero-note cc-hero-note-dim">rata-rata per order</div>
+        </div>
+        <div>
+          <div class="cc-hero-label cc-hero-label-dim">Conv. rate</div>
+          <div class="cc-hero-mini"><span id="cc-conv">—</span><span class="cc-hero-mini-unit">%</span></div>
+          <div class="cc-hero-note cc-hero-note-ok" id="cc-conv-delta">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTION TILES -->
+    <div class="cc-actions">
+      <div class="cc-act cc-act-red" id="cc-act-failed" onclick="showPage('transactions')">
+        <span class="cc-act-badge cc-act-badge-red">Urgent</span>
+        <div class="cc-act-icon cc-act-icon-red">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div>
+          <div class="cc-act-head"><span id="cc-failed-count">—</span> TV GRANT GAGAL</div>
+          <p>User sudah bayar tapi belum dapat akses indikator. Perbaiki username &amp; retry.</p>
+          <div class="cc-act-cta cc-act-cta-red">Retry semua →</div>
+        </div>
+      </div>
+
+      <div class="cc-act cc-act-amber" id="cc-act-review" onclick="showPage('affiliates')">
+        <span class="cc-act-badge cc-act-badge-amber">Review</span>
+        <div class="cc-act-icon cc-act-icon-amber">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="cc-act-head"><span id="cc-pending-aff-count">—</span> AFFILIATE MENUNGGU</div>
+          <p>Pendaftar baru yang belum di-approve.</p>
+          <div class="cc-act-cta cc-act-cta-amber">Review pendaftaran →</div>
+        </div>
+      </div>
+
+      <div class="cc-act cc-act-emerald" id="cc-act-payout" onclick="showPage('affiliates')">
+        <span class="cc-act-badge cc-act-badge-emerald">Ready</span>
+        <div class="cc-act-icon cc-act-icon-emerald">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+        </div>
+        <div>
+          <div class="cc-act-head">PAYOUT READY · <span id="cc-payout-amt">Rp —</span></div>
+          <p><span id="cc-payout-count">—</span> affiliate sudah bisa dicairkan. Setelah lewat hold 5 hari kerja.</p>
+          <div class="cc-act-cta cc-act-cta-emerald">Proses payout →</div>
+        </div>
+      </div>
     </div>
 
     <!-- INCOME CHART -->
@@ -1059,21 +1221,11 @@ function loadAll() {
 // ── Dashboard ─────────────────────────────────────────────────────
 async function loadDashboard() {
   try {
-    const [subs, txs] = await Promise.all([
-      api('GET', '/admin/subscribers'),
-      api('GET', '/admin/transactions')
-    ]);
+    const txs = await api('GET', '/admin/transactions');
 
-    const now = new Date();
-    const active = subs.subscribers.filter(s =>
-      s.is_lifetime || (s.expires_at && new Date(s.expires_at) > now)
-    );
-    const totalRev = subs.subscribers.reduce((a, s) => a + parseInt(s.total_transaction || 0), 0);
-
-    document.getElementById('stat-subs').textContent   = subs.subscribers.length;
-    document.getElementById('stat-active').textContent = active.length;
-    document.getElementById('stat-txs').textContent    = txs.transactions.length;
-    document.getElementById('stat-rev').textContent    = 'Rp ' + totalRev.toLocaleString('id-ID');
+    // Hero KPI cards (Phase C2 PR2) — fire-and-forget so a hero error
+    // doesn't block tx tables / charts below.
+    loadAdminHero().catch(e => console.error('loadAdminHero error:', e));
 
     // Funnel + Income charts (Phase C2 PR1) — fire-and-forget; chart errors
     // shouldn't block the rest of the dashboard render.
@@ -1442,6 +1594,124 @@ function _adminFmtRpFull(v) { return 'Rp ' + Math.round(v).toLocaleString('id-ID
 
 async function loadAdminCharts() {
   await Promise.all([loadAdminIncomeChart(), loadAdminFunnelChart()]);
+}
+
+// ── Dashboard Hero KPI cards (Phase C2 PR2) ──────────────────────
+// Reads /admin/stats/hero (returns ~14 KPI fields) and writes to the
+// cc-hero + cc-actions DOM blocks. All BIGINT-source fields coerced
+// via Number() defensively (Postgres SUM/COUNT serialize as JSON
+// strings; conv_rate is a float-as-string from the backend).
+async function loadAdminHero() {
+  try {
+    const hero = await api('GET', '/admin/stats/hero');
+
+    const fmtRp = (n) => {
+      n = Number(n || 0);
+      if (!n) return 'Rp 0';
+      if (n >= 1e9) return 'Rp ' + (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'M';
+      if (n >= 1e6) return 'Rp ' + (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'jt';
+      if (n >= 1e3) return 'Rp ' + Math.round(n / 1e3) + 'k';
+      return 'Rp ' + n;
+    };
+    const fmtFull = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+    // Hero metrics
+    const heroRevenue  = Number(hero.revenue       || 0);
+    const heroTxCount  = Number(hero.tx_count      || 0);
+    const heroPendingC = Number(hero.pending_count || 0);
+
+    setText('cc-rev', fmtFull(heroRevenue));
+
+    // MoM delta pill — green if up, red if down
+    const momDeltaEl = document.getElementById('cc-rev-delta');
+    if (momDeltaEl) {
+      if (hero.mom_delta !== null && hero.mom_delta !== undefined) {
+        const mom = parseFloat(hero.mom_delta);
+        const sign = mom >= 0 ? '↑' : '↓';
+        momDeltaEl.className   = mom >= 0 ? 'cc-pill-ok' : 'cc-pill-bad';
+        momDeltaEl.textContent = `${sign} ${Math.abs(mom)}% vs bulan lalu`;
+      } else {
+        momDeltaEl.className   = 'cc-pill-ok';
+        momDeltaEl.textContent = '— tidak ada data bulan lalu';
+      }
+    }
+
+    // Tx count + today/yesterday delta
+    setText('cc-tx', heroTxCount.toLocaleString('id-ID'));
+    const txDelta   = Number(hero.tx_delta || 0);
+    const txDeltaEl = document.getElementById('cc-tx-delta');
+    if (txDeltaEl) {
+      if (txDelta > 0) {
+        txDeltaEl.textContent = `↑ ${txDelta} dari kemarin`;
+        txDeltaEl.className   = 'cc-hero-note cc-hero-note-ok';
+      } else if (txDelta < 0) {
+        txDeltaEl.textContent = `↓ ${Math.abs(txDelta)} dari kemarin`;
+        txDeltaEl.className   = 'cc-hero-note cc-hero-note-warn';
+      } else {
+        txDeltaEl.textContent = 'sama seperti kemarin';
+        txDeltaEl.className   = 'cc-hero-note cc-hero-note-dim';
+      }
+    }
+
+    // AOV
+    setText('cc-aov', fmtRp(Number(hero.aov || 0)));
+
+    // Conv rate (paid / total orders)
+    setText('cc-conv', hero.conv_rate || '0.0');
+    const convDeltaEl = document.getElementById('cc-conv-delta');
+    if (convDeltaEl) {
+      if (hero.conv_total_orders !== undefined) {
+        const paid  = Number(hero.conv_paid_orders  || 0);
+        const total = Number(hero.conv_total_orders || 0);
+        convDeltaEl.textContent = `${paid} / ${total} orders`;
+        convDeltaEl.title       = 'Paid orders ÷ total orders, last 30 days';
+      } else {
+        convDeltaEl.textContent = `${heroPendingC} pending`;
+      }
+    }
+
+    // Sparkline — pure SVG path, computed from hero.spark[] (30-day series).
+    // Server pre-seeds zeros so the array is always 30 long.
+    const spark = (hero.spark && hero.spark.length)
+      ? hero.spark.map(v => Number(v || 0))
+      : new Array(30).fill(0);
+    const maxSpark = Math.max(1, ...spark);
+    const sparkPts = spark.map((v, i) => [
+      (i / (spark.length - 1)) * 500,
+      220 - (v / maxSpark) * 180,
+    ]);
+    const sparkLine = sparkPts.map((p, i) =>
+      (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)
+    ).join(' ');
+    const sparkArea = sparkLine + ' L 500 220 L 0 220 Z';
+    const lineEl = document.getElementById('cc-hero-line');
+    const areaEl = document.getElementById('cc-hero-area');
+    if (lineEl) lineEl.setAttribute('d', sparkLine);
+    if (areaEl) areaEl.setAttribute('d', sparkArea);
+
+    // Action tiles — 3 work-queue counters
+    const tvFailedCount = Number(hero.tv_failed_count   || 0);
+    const affPendingC   = Number(hero.aff_pending_count || 0);
+    const payoutAmt     = Number(hero.payout_amt        || 0);
+    const payoutAffC    = Number(hero.payout_aff_count  || 0);
+
+    setText('cc-failed-count',      tvFailedCount);
+    setText('cc-pending-aff-count', affPendingC);
+    setText('cc-payout-amt',        fmtRp(payoutAmt));
+    setText('cc-payout-count',      payoutAffC);
+
+    // Dim tiles whose queue is empty so the eye skips past them.
+    const _dim = (id, empty) => {
+      const el = document.getElementById(id);
+      if (el) el.style.opacity = empty ? '0.5' : '1';
+    };
+    _dim('cc-act-failed', tvFailedCount === 0);
+    _dim('cc-act-review', affPendingC   === 0);
+    _dim('cc-act-payout', payoutAmt     === 0);
+  } catch (e) {
+    console.error('loadAdminHero error:', e);
+  }
 }
 
 async function loadAdminFunnelChart() {
