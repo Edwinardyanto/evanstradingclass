@@ -309,7 +309,35 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     padding: 20px !important;
   }
 }
+
+/* ─── Dashboard charts (cc-* panels) ───────────────────────── */
+.cc-panel {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px; margin-bottom: 14px;
+}
+.cc-panel-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px; gap: 12px; flex-wrap: wrap;
+}
+.cc-panel-title { font-size: 13px; font-weight: 600; color: var(--white); }
+.cc-panel-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cc-period { display: flex; gap: 4px; }
+.period-btn {
+  font-size: 11px; padding: 5px 11px; border-radius: 6px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; transition: all .15s;
+}
+.period-btn:hover { color: var(--white); }
+.period-btn.active { background: var(--cyan); color: #0C0A1A; border-color: var(--cyan); }
+.cc-legend {
+  display: flex; gap: 16px; margin-top: 10px;
+  font-size: 12px; color: var(--muted); flex-wrap: wrap;
+}
+.cc-legend > div { display: flex; align-items: center; gap: 6px; }
+.cc-sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+        crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -360,6 +388,47 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
       <div class="stat-card"><div class="stat-label">Active Subscribers</div><div class="stat-value" id="stat-active">—</div><div class="stat-sub">akses aktif</div></div>
       <div class="stat-card"><div class="stat-label">Total Transaksi</div><div class="stat-value" id="stat-txs">—</div><div class="stat-sub">orders</div></div>
       <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" id="stat-rev" style="font-size:24px">—</div><div class="stat-sub">net</div></div>
+    </div>
+
+    <!-- INCOME CHART -->
+    <div class="cc-panel">
+      <div class="cc-panel-head">
+        <div>
+          <div class="cc-panel-title" id="cc-income-title">Revenue harian · Last 30 days</div>
+          <div class="cc-panel-sub">Granted-only revenue · daily series</div>
+        </div>
+        <div class="cc-period" id="admin-range-toggle">
+          <button class="period-btn" onclick="setAdminRange(1,0,'Today',this)">Today</button>
+          <button class="period-btn" onclick="setAdminRange(7,0,'Last 7 days',this)">7D</button>
+          <button class="period-btn active" onclick="setAdminRange(30,0,'Last 30 days',this)">30D</button>
+        </div>
+      </div>
+      <div style="position:relative;width:100%;height:200px;">
+        <canvas id="admin-chart-income" role="img" aria-label="Revenue harian"></canvas>
+      </div>
+      <div class="cc-legend">
+        <div><span class="cc-sw" style="background:#00C8D7"></span>Revenue · <span id="cc-legend-paid">Rp —</span></div>
+        <div><span class="cc-sw" style="background:#F5C842;border-radius:50%"></span>Orders · <span id="cc-legend-txcount">— order</span></div>
+      </div>
+    </div>
+
+    <!-- FUNNEL CHART -->
+    <div class="cc-panel">
+      <div class="cc-panel-head">
+        <div>
+          <div class="cc-panel-title">Funnel Traffic</div>
+          <div class="cc-panel-sub" id="cc-funnel-sub">Last 30 days · Kunjungan → Checkout → Form Diisi → Paid</div>
+        </div>
+      </div>
+      <div style="position:relative;width:100%;height:240px;">
+        <canvas id="admin-chart-funnel" role="img" aria-label="Funnel Traffic"></canvas>
+      </div>
+      <div class="cc-legend" style="flex-wrap:wrap;">
+        <div><span class="cc-sw" style="background:#7F77DD"></span>Kunjungan · <span id="cc-tr-home">—</span></div>
+        <div><span class="cc-sw" style="background:#1D9E75"></span>Checkout · <span id="cc-tr-co">—</span></div>
+        <div><span class="cc-sw" style="background:#EF9F27"></span>Form Diisi · <span id="cc-tr-ff">—</span></div>
+        <div><span class="cc-sw" style="background:#D85A30"></span>Paid · <span id="cc-tr-paid">—</span></div>
+      </div>
     </div>
 
     <div class="section">
@@ -1006,6 +1075,10 @@ async function loadDashboard() {
     document.getElementById('stat-txs').textContent    = txs.transactions.length;
     document.getElementById('stat-rev').textContent    = 'Rp ' + totalRev.toLocaleString('id-ID');
 
+    // Funnel + Income charts (Phase C2 PR1) — fire-and-forget; chart errors
+    // shouldn't block the rest of the dashboard render.
+    loadAdminCharts().catch(e => console.error('loadAdminCharts error:', e));
+
     // Recent txs
     const recent = txs.transactions.slice(0, 10);
     document.getElementById('dashboard-txs').innerHTML = recent.length
@@ -1338,6 +1411,195 @@ function showAlert(page, msg, type) {
   el.textContent = msg;
   el.className = `alert alert-${type} show`;
   setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+// ── Dashboard charts (Funnel + Income) ────────────────────────────
+let adminChartIncome = null;
+let adminChartFunnel = null;
+let _adminRange = { days: 30, offset: 0, label: 'Last 30 days' };
+
+function setAdminRange(days, offset, label, btn) {
+  _adminRange = { days, offset, label };
+  // Visual toggle within the period group of the clicked button only.
+  if (btn) {
+    btn.parentNode.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const titleEl = document.getElementById('cc-income-title');
+  if (titleEl) titleEl.textContent = 'Revenue harian · ' + label;
+  const funnelSubEl = document.getElementById('cc-funnel-sub');
+  if (funnelSubEl) funnelSubEl.textContent = label + ' · Kunjungan → Checkout → Form Diisi → Paid';
+  loadAdminCharts();
+}
+
+function _adminFmtRpShort(v) {
+  if (v >= 1e9) return (v / 1e9).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (v >= 1e6) return (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'jt';
+  if (v >= 1e3) return Math.round(v / 1e3) + 'k';
+  return String(v);
+}
+function _adminFmtRpFull(v) { return 'Rp ' + Math.round(v).toLocaleString('id-ID'); }
+
+async function loadAdminCharts() {
+  await Promise.all([loadAdminIncomeChart(), loadAdminFunnelChart()]);
+}
+
+async function loadAdminFunnelChart() {
+  if (typeof Chart === 'undefined') return;
+  const gridColor = 'rgba(255,255,255,0.06)';
+  const tickColor = '#888';
+  try {
+    const data = await api(
+      'GET',
+      '/admin/stats/funnel?days=' + _adminRange.days + '&offset=' + _adminRange.offset
+    );
+    const series = data.days || [];
+    const labels = series.map(d => {
+      const dt = new Date(d.date);
+      return String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0');
+    });
+
+    const t = data.totals || { homepage: 0, checkout: 0, form_fill: 0, paid: 0 };
+    const fmt = (n) => (n || 0).toLocaleString('id-ID');
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setText('cc-tr-home', fmt(t.homepage));
+    setText('cc-tr-co',   fmt(t.checkout));
+    setText('cc-tr-ff',   fmt(t.form_fill));
+    setText('cc-tr-paid', fmt(t.paid));
+
+    if (adminChartFunnel) adminChartFunnel.destroy();
+    const ctx = document.getElementById('admin-chart-funnel');
+    if (!ctx) return;
+    adminChartFunnel = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Paid',       data: series.map(d => d.paid      || 0), backgroundColor: '#D85A30', stack: 'a', borderRadius: 4, borderSkipped: false },
+          { label: 'Form Diisi', data: series.map(d => d.form_fill || 0), backgroundColor: '#EF9F27', stack: 'a', borderRadius: 4, borderSkipped: false },
+          { label: 'Checkout',   data: series.map(d => d.checkout  || 0), backgroundColor: '#1D9E75', stack: 'a', borderRadius: 4, borderSkipped: false },
+          { label: 'Kunjungan',  data: series.map(d => d.homepage  || 0), backgroundColor: '#7F77DD', stack: 'a', borderRadius: 4, borderSkipped: false },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { mode: 'index', callbacks: { title: c => c[0].label, label: c => '  ' + c.dataset.label + ': ' + c.parsed.y } },
+        },
+        scales: {
+          x: { stacked: true, ticks: { color: tickColor, font: { size: 10 }, maxTicksLimit: 30, autoSkip: true, maxRotation: 0 }, grid: { color: gridColor } },
+          y: { stacked: true, ticks: { color: tickColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true },
+        },
+      },
+    });
+  } catch (e) { console.error('loadAdminFunnelChart error:', e); }
+}
+
+// Path A adaptation: consumes ETC's /admin/income (returns
+// {summary, daily, by_product}) instead of TRXC-side /admin/stats/daily.
+// Field renames: data.daily (was income[]); per-row d.revenue + d.orders
+// (was income + tx_count); summary.{total_revenue, total_orders,
+// pending_revenue, pending_orders}. Drops the offset query param.
+async function loadAdminIncomeChart() {
+  if (typeof Chart === 'undefined') return;
+  const gridColor = 'rgba(255,255,255,0.06)';
+  const tickColor = '#888';
+  try {
+    const data = await api('GET', '/admin/income?days=' + _adminRange.days);
+    const days = data.daily || [];
+    const labels = days.map(d => {
+      const dt = new Date(d.date);
+      return String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0');
+    });
+
+    const pendingEl    = document.getElementById('admin-stat-pending');
+    const incomeEl     = document.getElementById('admin-stat-income');
+    const pendingSubEl = document.getElementById('admin-stat-pending-sub');
+    const incomeSubEl  = document.getElementById('admin-stat-income-sub');
+    if (pendingEl) pendingEl.textContent = _adminFmtRpFull(data.summary?.pending_revenue || 0);
+    if (incomeEl)  incomeEl.textContent  = _adminFmtRpFull(data.summary?.total_revenue   || 0);
+    if (pendingSubEl && data.summary?.pending_orders !== undefined)
+      pendingSubEl.textContent = (data.summary.pending_orders || 0) + ' order belum dibayar';
+    if (incomeSubEl && data.summary?.total_orders !== undefined)
+      incomeSubEl.textContent = (data.summary.total_orders || 0) + ' transaksi paid';
+
+    const totalRev = days.reduce((a, d) => a + (d.revenue || 0), 0);
+    const totalTx  = days.reduce((a, d) => a + (d.orders  || 0), 0);
+    const legendPaid = document.getElementById('cc-legend-paid');
+    const legendTx   = document.getElementById('cc-legend-txcount');
+    if (legendPaid) legendPaid.textContent = _adminFmtRpFull(totalRev);
+    if (legendTx)   legendTx.textContent   = totalTx.toLocaleString('id-ID') + ' order';
+
+    if (adminChartIncome) adminChartIncome.destroy();
+    const ctx = document.getElementById('admin-chart-income');
+    if (!ctx) return;
+    adminChartIncome = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: days.map(d => d.revenue || 0),
+            backgroundColor: '#00C8D7',
+            borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+            borderSkipped: false,
+            yAxisID: 'y',
+            order: 2,
+          },
+          {
+            type: 'line',
+            label: 'Orders',
+            data: days.map(d => d.orders || 0),
+            borderColor: '#F5C842',
+            backgroundColor: 'rgba(245,200,66,0.15)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: '#F5C842',
+            tension: 0.3,
+            fill: false,
+            yAxisID: 'y1',
+            order: 1,
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index',
+            callbacks: {
+              title: c => c[0].label,
+              label: c => c.dataset.yAxisID === 'y'
+                ? '  Revenue: '   + _adminFmtRpFull(c.parsed.y)
+                : '  Orders: ' + c.parsed.y + ' order',
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: tickColor, font: { size: 10 }, maxTicksLimit: 30, autoSkip: true, maxRotation: 0 },
+            grid:  { color: gridColor }
+          },
+          y: {
+            position: 'left',
+            ticks: { color: tickColor, font: { size: 10 }, callback: v => _adminFmtRpShort(v) },
+            grid:  { color: gridColor },
+            beginAtZero: true,
+          },
+          y1: {
+            position: 'right',
+            ticks: { color: '#F5C842', font: { size: 10 }, stepSize: 1, callback: v => v + 'x' },
+            grid:  { drawOnChartArea: false },
+            beginAtZero: true,
+          }
+        }
+      }
+    });
+  } catch (e) { console.error('loadAdminIncomeChart error:', e); }
 }
 
 // ── Affiliates ────────────────────────────────────────────────────
