@@ -441,12 +441,14 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
           <thead><tr>
             <th>TV Username</th>
             <th class="hide-mobile">Email</th>
+            <th class="hide-mobile">Latest Product</th>
             <th class="hide-mobile">Expires</th>
             <th class="hide-mobile">Total Transaksi</th>
             <th>Status</th>
+            <th>TV</th>
             <th>Aksi</th>
           </tr></thead>
-          <tbody id="subscribers-table"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
+          <tbody id="subscribers-table"><tr><td colspan="8" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
       <div id="subscribers-pagination"></div>
@@ -467,11 +469,12 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
             <th>TV Username</th>
             <th class="hide-mobile">Produk</th>
             <th>Amount</th>
+            <th class="hide-mobile">Payment</th>
             <th class="hide-mobile">Expires</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr></thead>
-          <tbody id="transactions-table"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody>
+          <tbody id="transactions-table"><tr><td colspan="8" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
       <div id="transactions-pagination"></div>
@@ -1172,13 +1175,15 @@ function renderSubscribers(list) {
         return `<tr>
           <td><strong>${s.tv_username}</strong></td>
           <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${s.email || '—'}</td>
+          <td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.latest_product || '—'}</td>
           <td class="mono hide-mobile" style="font-size:12px">${s.is_lifetime ? '<span style="color:var(--gold)">Lifetime</span>' : (s.expires_at ? fmtDate(s.expires_at) : '—')}</td>
           <td class="mono hide-mobile">Rp ${parseInt(s.total_transaction||0).toLocaleString('id-ID')}</td>
           <td>${expired ? '<span class="badge badge-red">Expired</span>' : s.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-muted">Inactive</span>'}</td>
+          <td>${s.tv_status === 'granted' ? '<span class="badge badge-green">GRANTED</span>' : s.tv_status === 'failed' ? '<span class="badge badge-red">FAILED</span>' : '—'}</td>
           <td><button class="btn btn-ghost btn-sm" onclick="viewSubscriber('${s.tv_username}')">Detail</button></td>
         </tr>`;
       }).join('')
-    : '<tr><td colspan="6" class="empty">Belum ada subscriber</td></tr>';
+    : '<tr><td colspan="8" class="empty">Belum ada subscriber</td></tr>';
 
   const paginationEl = document.getElementById('subscribers-pagination');
   if (paginationEl) {
@@ -1245,6 +1250,7 @@ function renderTransactions() {
         <td><strong>${t.tv_username}</strong></td>
         <td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:200px">${t.product_name || '—'}</td>
         <td class="mono">Rp ${parseInt(t.amount||0).toLocaleString('id-ID')}</td>
+        <td class="hide-mobile">${t.payment_status === 'paid' ? '<span class="badge badge-green">PAID</span>' : '—'}</td>
         <td class="mono hide-mobile" style="font-size:12px">${t.is_lifetime ? '<span style="color:var(--gold)">Lifetime</span>' : (t.expires_at ? fmtDate(t.expires_at) : '—')}</td>
         <td>${statusBadge(t.tv_access_status)}</td>
         <td>${['failed','failed_no_username','failed_unknown_product','processing'].includes(t.tv_access_status)
@@ -1254,7 +1260,7 @@ function renderTransactions() {
              </div>`
           : ''}</td>
       </tr>`).join('')
-    : '<tr><td colspan="7" class="empty">Belum ada transaksi</td></tr>';
+    : '<tr><td colspan="8" class="empty">Belum ada transaksi</td></tr>';
 
   const paginationEl = document.getElementById('transactions-pagination');
   if (paginationEl) {
