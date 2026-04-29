@@ -1460,7 +1460,7 @@ async function loadAdminFunnelChart() {
     });
 
     const t = data.totals || { homepage: 0, checkout: 0, form_fill: 0, paid: 0 };
-    const fmt = (n) => (n || 0).toLocaleString('id-ID');
+    const fmt = (n) => Number(n || 0).toLocaleString('id-ID');
     const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     setText('cc-tr-home', fmt(t.homepage));
     setText('cc-tr-co',   fmt(t.checkout));
@@ -1475,10 +1475,10 @@ async function loadAdminFunnelChart() {
       data: {
         labels,
         datasets: [
-          { label: 'Paid',       data: series.map(d => d.paid      || 0), backgroundColor: '#D85A30', stack: 'a', borderRadius: 4, borderSkipped: false },
-          { label: 'Form Diisi', data: series.map(d => d.form_fill || 0), backgroundColor: '#EF9F27', stack: 'a', borderRadius: 4, borderSkipped: false },
-          { label: 'Checkout',   data: series.map(d => d.checkout  || 0), backgroundColor: '#1D9E75', stack: 'a', borderRadius: 4, borderSkipped: false },
-          { label: 'Kunjungan',  data: series.map(d => d.homepage  || 0), backgroundColor: '#7F77DD', stack: 'a', borderRadius: 4, borderSkipped: false },
+          { label: 'Paid',       data: series.map(d => Number(d.paid      || 0)), backgroundColor: '#D85A30', stack: 'a', borderRadius: 4, borderSkipped: false },
+          { label: 'Form Diisi', data: series.map(d => Number(d.form_fill || 0)), backgroundColor: '#EF9F27', stack: 'a', borderRadius: 4, borderSkipped: false },
+          { label: 'Checkout',   data: series.map(d => Number(d.checkout  || 0)), backgroundColor: '#1D9E75', stack: 'a', borderRadius: 4, borderSkipped: false },
+          { label: 'Kunjungan',  data: series.map(d => Number(d.homepage  || 0)), backgroundColor: '#7F77DD', stack: 'a', borderRadius: 4, borderSkipped: false },
         ],
       },
       options: {
@@ -1517,15 +1517,15 @@ async function loadAdminIncomeChart() {
     const incomeEl     = document.getElementById('admin-stat-income');
     const pendingSubEl = document.getElementById('admin-stat-pending-sub');
     const incomeSubEl  = document.getElementById('admin-stat-income-sub');
-    if (pendingEl) pendingEl.textContent = _adminFmtRpFull(data.summary?.pending_revenue || 0);
-    if (incomeEl)  incomeEl.textContent  = _adminFmtRpFull(data.summary?.total_revenue   || 0);
+    if (pendingEl) pendingEl.textContent = _adminFmtRpFull(Number(data.summary?.pending_revenue || 0));
+    if (incomeEl)  incomeEl.textContent  = _adminFmtRpFull(Number(data.summary?.total_revenue   || 0));
     if (pendingSubEl && data.summary?.pending_orders !== undefined)
       pendingSubEl.textContent = (data.summary.pending_orders || 0) + ' order belum dibayar';
     if (incomeSubEl && data.summary?.total_orders !== undefined)
       incomeSubEl.textContent = (data.summary.total_orders || 0) + ' transaksi paid';
 
-    const totalRev = days.reduce((a, d) => a + (d.revenue || 0), 0);
-    const totalTx  = days.reduce((a, d) => a + (d.orders  || 0), 0);
+    const totalRev = days.reduce((a, d) => a + Number(d.revenue || 0), 0);
+    const totalTx  = days.reduce((a, d) => a + Number(d.orders  || 0), 0);
     const legendPaid = document.getElementById('cc-legend-paid');
     const legendTx   = document.getElementById('cc-legend-txcount');
     if (legendPaid) legendPaid.textContent = _adminFmtRpFull(totalRev);
@@ -1541,7 +1541,7 @@ async function loadAdminIncomeChart() {
         datasets: [
           {
             label: 'Revenue',
-            data: days.map(d => d.revenue || 0),
+            data: days.map(d => Number(d.revenue || 0)),
             backgroundColor: '#00C8D7',
             borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
             borderSkipped: false,
@@ -1551,7 +1551,7 @@ async function loadAdminIncomeChart() {
           {
             type: 'line',
             label: 'Orders',
-            data: days.map(d => d.orders || 0),
+            data: days.map(d => Number(d.orders || 0)),
             borderColor: '#F5C842',
             backgroundColor: 'rgba(245,200,66,0.15)',
             borderWidth: 2,
