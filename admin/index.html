@@ -531,6 +531,77 @@ nav.legacy-nav { display: none !important; }
   background: var(--card); border: 1px solid var(--border);
   border-radius: 12px; padding: 18px; margin-bottom: 14px;
 }
+
+/* ─── F3 Command Center grid system + ancillary panels ─────── */
+.cc-row { display: grid; gap: 14px; margin-bottom: 14px; }
+.cc-row > .cc-panel { margin-bottom: 0; } /* row supplies the gap */
+.cc-row-2-1  { grid-template-columns: 2fr 1fr; }
+.cc-row-13-1 { grid-template-columns: 1.3fr 1fr; }
+.cc-row-1-1  { grid-template-columns: 1fr 1fr; }
+.cc-panel-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 240px; color: var(--muted); font-size: 12px; letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Recent orders compact list (cc-orders-list) */
+.cc-order-row {
+  display: flex; align-items: center; gap: 12px; padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cc-order-row:last-child { border-bottom: none; }
+.cc-order-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: grid; place-items: center; font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+}
+.cc-order-avatar-base { background: var(--card2); color: var(--muted); }
+.cc-order-avatar-gold { background: rgba(245,200,66,.18); color: var(--gold); }
+.cc-order-avatar-lt   { background: rgba(0,200,215,.18); color: var(--cyan); }
+.cc-order-user { font-size: 13px; font-weight: 500; color: var(--white); }
+.cc-order-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+.cc-order-amt {
+  font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  font-size: 13px; color: var(--white); text-align: right;
+}
+.cc-order-time { font-size: 11px; color: var(--muted); text-align: right; }
+.cc-order-status {
+  padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.cc-status-granted    { background: rgba(0,212,138,.18); color: #6EE7B7; }
+.cc-status-processing { background: rgba(217,119,6,.18); color: #FCD34D; }
+.cc-status-failed     { background: rgba(220,38,38,.18); color: #FCA5A5; }
+
+/* Top affiliates list (cc-affiliates-list) */
+.cc-aff-row {
+  display: flex; align-items: center; gap: 12px; padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cc-aff-row:last-child { border-bottom: none; }
+.cc-aff-rank {
+  width: 24px; font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--muted); font-weight: 700; text-align: center;
+  flex-shrink: 0;
+}
+.cc-aff-name { font-size: 13px; font-weight: 500; color: var(--white); }
+.cc-aff-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+.cc-aff-bar-wrap {
+  width: 80px; height: 4px; background: var(--border);
+  border-radius: 999px; flex-shrink: 0;
+}
+.cc-aff-bar { height: 100%; background: var(--cyan); border-radius: 999px; }
+.cc-aff-comm {
+  font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  font-size: 12px; text-align: right; min-width: 80px; color: var(--white);
+}
+
+/* Sold Products donut placeholder (F4 will replace contents) */
+.cc-mix-list { font-size: 12.5px; flex: 1; }
+
+@media (max-width: 1100px) {
+  .cc-row-2-1, .cc-row-13-1, .cc-row-1-1 { grid-template-columns: 1fr; }
+}
 .cc-panel-head {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 14px; gap: 12px; flex-wrap: wrap;
@@ -746,64 +817,87 @@ nav.legacy-nav { display: none !important; }
       </div>
     </div>
 
-    <!-- INCOME CHART -->
-    <div class="cc-panel">
-      <div class="cc-panel-head">
-        <div>
-          <div class="cc-panel-title" id="cc-income-title">Revenue harian · Last 30 days</div>
-          <div class="cc-panel-sub">Granted-only revenue · daily series</div>
+    <!-- REVENUE + MIX (Phase F3 cc-row-2-1) -->
+    <div class="cc-row cc-row-2-1">
+      <!-- INCOME CHART (existing C2 PR1, repositioned into cc-row) -->
+      <div class="cc-panel">
+        <div class="cc-panel-head">
+          <div>
+            <div class="cc-panel-title" id="cc-income-title">Revenue harian · Last 30 days</div>
+            <div class="cc-panel-sub">Granted-only revenue · daily series</div>
+          </div>
+          <div class="cc-period" id="admin-range-toggle">
+            <button class="period-btn" onclick="setAdminRange(1,0,'Today',this)">Today</button>
+            <button class="period-btn" onclick="setAdminRange(7,0,'Last 7 days',this)">7D</button>
+            <button class="period-btn active" onclick="setAdminRange(30,0,'Last 30 days',this)">30D</button>
+          </div>
         </div>
-        <div class="cc-period" id="admin-range-toggle">
-          <button class="period-btn" onclick="setAdminRange(1,0,'Today',this)">Today</button>
-          <button class="period-btn" onclick="setAdminRange(7,0,'Last 7 days',this)">7D</button>
-          <button class="period-btn active" onclick="setAdminRange(30,0,'Last 30 days',this)">30D</button>
+        <div style="position:relative;width:100%;height:200px;">
+          <canvas id="admin-chart-income" role="img" aria-label="Revenue harian"></canvas>
+        </div>
+        <div class="cc-legend">
+          <div><span class="cc-sw" style="background:#00C8D7"></span>Revenue · <span id="cc-legend-paid">Rp —</span></div>
+          <div><span class="cc-sw" style="background:#F5C842;border-radius:50%"></span>Orders · <span id="cc-legend-txcount">— order</span></div>
         </div>
       </div>
-      <div style="position:relative;width:100%;height:200px;">
-        <canvas id="admin-chart-income" role="img" aria-label="Revenue harian"></canvas>
-      </div>
-      <div class="cc-legend">
-        <div><span class="cc-sw" style="background:#00C8D7"></span>Revenue · <span id="cc-legend-paid">Rp —</span></div>
-        <div><span class="cc-sw" style="background:#F5C842;border-radius:50%"></span>Orders · <span id="cc-legend-txcount">— order</span></div>
+      <!-- SOLD PRODUCTS placeholder (F4 will populate cc-donut + cc-mix-list) -->
+      <div class="cc-panel">
+        <div class="cc-panel-head">
+          <div>
+            <div class="cc-panel-title">Sold Products</div>
+            <div class="cc-panel-sub" id="cc-mix-sub">Last 30 days</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:18px;min-height:140px;">
+          <svg id="cc-donut" width="120" height="120" viewBox="0 0 120 120" aria-label="Sold Products"></svg>
+          <div id="cc-mix-list" class="cc-mix-list"><div style="color:var(--muted);font-size:12px;">Coming soon</div></div>
+        </div>
       </div>
     </div>
 
-    <!-- FUNNEL CHART -->
-    <div class="cc-panel">
-      <div class="cc-panel-head">
-        <div>
-          <div class="cc-panel-title">Funnel Traffic</div>
-          <div class="cc-panel-sub" id="cc-funnel-sub">Last 30 days · Kunjungan → Checkout → Form Diisi → Paid</div>
+    <!-- FUNNEL TRAFFIC + RESERVED (Phase F3 cc-row-1-1) -->
+    <div class="cc-row cc-row-1-1">
+      <!-- FUNNEL CHART (existing C2 PR1, repositioned into cc-row) -->
+      <div class="cc-panel">
+        <div class="cc-panel-head">
+          <div>
+            <div class="cc-panel-title">Funnel Traffic</div>
+            <div class="cc-panel-sub" id="cc-funnel-sub">Last 30 days · Kunjungan → Checkout → Form Diisi → Paid</div>
+          </div>
+        </div>
+        <div style="position:relative;width:100%;height:240px;">
+          <canvas id="admin-chart-funnel" role="img" aria-label="Funnel Traffic"></canvas>
+        </div>
+        <div class="cc-legend" style="flex-wrap:wrap;">
+          <div><span class="cc-sw" style="background:#7F77DD"></span>Kunjungan · <span id="cc-tr-home">—</span></div>
+          <div><span class="cc-sw" style="background:#1D9E75"></span>Checkout · <span id="cc-tr-co">—</span></div>
+          <div><span class="cc-sw" style="background:#EF9F27"></span>Form Diisi · <span id="cc-tr-ff">—</span></div>
+          <div><span class="cc-sw" style="background:#D85A30"></span>Paid · <span id="cc-tr-paid">—</span></div>
         </div>
       </div>
-      <div style="position:relative;width:100%;height:240px;">
-        <canvas id="admin-chart-funnel" role="img" aria-label="Funnel Traffic"></canvas>
-      </div>
-      <div class="cc-legend" style="flex-wrap:wrap;">
-        <div><span class="cc-sw" style="background:#7F77DD"></span>Kunjungan · <span id="cc-tr-home">—</span></div>
-        <div><span class="cc-sw" style="background:#1D9E75"></span>Checkout · <span id="cc-tr-co">—</span></div>
-        <div><span class="cc-sw" style="background:#EF9F27"></span>Form Diisi · <span id="cc-tr-ff">—</span></div>
-        <div><span class="cc-sw" style="background:#D85A30"></span>Paid · <span id="cc-tr-paid">—</span></div>
-      </div>
+      <!-- RESERVED placeholder -->
+      <div class="cc-panel cc-panel-empty" id="cc-reserved-panel">Coming soon</div>
     </div>
 
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Transaksi Terbaru</div>
-        <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+    <!-- ORDERS + AFFILIATES (Phase F3 cc-row-13-1, NEW) -->
+    <div class="cc-row cc-row-13-1">
+      <div class="cc-panel">
+        <div class="cc-panel-head">
+          <div>
+            <div class="cc-panel-title">Order terbaru</div>
+            <div class="cc-panel-sub">6 order paling baru</div>
+          </div>
+        </div>
+        <div id="cc-orders-list"></div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th class="hide-mobile">Order ID</th>
-            <th>TV Username</th>
-            <th class="hide-mobile">Produk</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th class="hide-mobile">Waktu</th>
-          </tr></thead>
-          <tbody id="dashboard-txs"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
-        </table>
+      <div class="cc-panel">
+        <div class="cc-panel-head">
+          <div>
+            <div class="cc-panel-title">Top affiliates</div>
+            <div class="cc-panel-sub">30 hari terakhir</div>
+          </div>
+        </div>
+        <div id="cc-affiliates-list"></div>
       </div>
     </div>
 
@@ -1493,18 +1587,10 @@ async function loadDashboard() {
     // shouldn't block the rest of the dashboard render.
     loadAdminCharts().catch(e => console.error('loadAdminCharts error:', e));
 
-    // Recent txs
-    const recent = txs.transactions.slice(0, 10);
-    document.getElementById('dashboard-txs').innerHTML = recent.length
-      ? recent.map(t => `<tr>
-          <td class="mono hide-mobile">${t.scalev_order_id}</td>
-          <td><strong>${t.tv_username}</strong></td>
-          <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${t.product_name || '—'}</td>
-          <td class="mono">Rp ${parseInt(t.amount||0).toLocaleString('id-ID')}</td>
-          <td>${statusBadge(t.tv_access_status)}</td>
-          <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${fmtDate(t.created_at)}</td>
-        </tr>`).join('')
-      : '<tr><td colspan="6" class="empty">Belum ada transaksi</td></tr>';
+    // Recent orders (Phase F3) — populates the cc-orders-list panel
+    // in the cc-row-13-1 dashboard row. Replaces the legacy "Transaksi
+    // Terbaru" full table with a compact 6-row display.
+    renderRecentOrders(txs.transactions);
 
     // Failed
     const failed = txs.transactions.filter(t =>
@@ -1996,6 +2082,78 @@ function resetOrderFilters() {
   loadAdminOrders();
 }
 
+// ── Dashboard panel renderers (Phase F3) ─────────────────────────
+// Recent orders compact list (cc-orders-list) and Top affiliates list
+// (cc-affiliates-list). Number() coercion applied to BIGINT-source
+// fields (amount, sales, commission) — backend returns those as JSON
+// strings (Postgres SUM/COUNT serialization).
+
+function renderRecentOrders(transactions) {
+  const list = (transactions || []).slice(0, 6);
+  const el = document.getElementById('cc-orders-list');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px 0;font-size:13px;">Belum ada order</div>';
+    return;
+  }
+  const fmtRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+  const timeAgo = (iso) => {
+    if (!iso) return '—';
+    const d = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (d < 60)    return Math.floor(d) + 's';
+    if (d < 3600)  return Math.floor(d / 60) + 'm';
+    if (d < 86400) return Math.floor(d / 3600) + 'h';
+    return Math.floor(d / 86400) + 'd';
+  };
+  el.innerHTML = list.map(t => {
+    const prodKey = (t.product_name || '').toLowerCase();
+    let avatarCls = 'cc-order-avatar-base';
+    if (prodKey.includes('life')) avatarCls = 'cc-order-avatar-lt';
+    else if (prodKey.includes('gold') || prodKey.includes('6')) avatarCls = 'cc-order-avatar-gold';
+    const initials = (t.product_name || 'OR').slice(0, 2).toUpperCase();
+    const status = t.tv_access_status;
+    let statusHtml = '<span class="cc-order-status cc-status-failed">Failed</span>';
+    if (status === 'granted')         statusHtml = '<span class="cc-order-status cc-status-granted">Granted</span>';
+    else if (status === 'processing') statusHtml = '<span class="cc-order-status cc-status-processing">Processing</span>';
+    return `<div class="cc-order-row">
+      <div class="cc-order-avatar ${avatarCls}">${initials}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="cc-order-user">${t.tv_username || '—'}</div>
+        <div class="cc-order-meta">#${t.scalev_order_id} · ${t.product_name || ''}</div>
+      </div>
+      <div>
+        <div class="cc-order-amt">${fmtRp(t.amount)}</div>
+        <div class="cc-order-time">${timeAgo(t.created_at)} ago</div>
+      </div>
+      ${statusHtml}
+    </div>`;
+  }).join('');
+}
+
+function renderTopAffiliates(topAffs) {
+  const arr = (topAffs || []);
+  const el = document.getElementById('cc-affiliates-list');
+  if (!el) return;
+  if (!arr.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px 0;font-size:13px;">Belum ada data affiliate</div>';
+    return;
+  }
+  const fmtRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+  const maxSales = Math.max(1, Number(arr[0]?.sales || 0));
+  el.innerHTML = arr.map((a, i) => {
+    const sales = Number(a.sales || 0);
+    return `<div class="cc-aff-row">
+      <div class="cc-aff-rank">#${i + 1}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="cc-aff-name">${a.name}</div>
+        <div class="cc-aff-meta">${a.ref_code} · ${sales} sales</div>
+      </div>
+      <div class="cc-aff-bar-wrap"><div class="cc-aff-bar" style="width:${(sales / maxSales) * 100}%;"></div></div>
+      <div class="cc-aff-comm">${fmtRp(a.commission)}</div>
+    </div>`;
+  }).join('');
+}
+
 // ── Dashboard Hero KPI cards (Phase C2 PR2) ──────────────────────
 // Reads /admin/stats/hero (returns ~14 KPI fields) and writes to the
 // cc-hero + cc-actions DOM blocks. All BIGINT-source fields coerced
@@ -2109,6 +2267,10 @@ async function loadAdminHero() {
     _dim('cc-act-failed', tvFailedCount === 0);
     _dim('cc-act-review', affPendingC   === 0);
     _dim('cc-act-payout', payoutAmt     === 0);
+
+    // Top affiliates panel (Phase F3) — uses hero.top_affiliates
+    // already in scope; no second API call.
+    renderTopAffiliates(hero.top_affiliates);
   } catch (e) {
     console.error('loadAdminHero error:', e);
   }
