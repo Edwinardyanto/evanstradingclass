@@ -1,0 +1,63 @@
+#!/bin/sh
+# ETC frontend pre-commit hook: block TRXC branding leaks
+# Setup: configure repo to use this hooks directory:
+#   git config core.hooksPath .githooks
+
+set -e
+
+# Patterns yang HARAM ada di ETC (TRXC equivalents)
+FORBIDDEN_PATTERNS='(rqq_sid|trxcqrr|tradityqrr|TRXC[^-A-Za-z0-9]|@TradityQRR|store\.trxcqrr\.com)'
+
+# Get list of staged files (added/modified, not deleted)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+  exit 0
+fi
+
+# Check each staged file
+LEAKS_FOUND=0
+LEAK_DETAILS=""
+
+for FILE in $STAGED_FILES; do
+  # Skip binary files
+  if file "$FILE" | grep -q "binary"; then
+    continue
+  fi
+
+  # Skip the hook itself & any future docs that intentionally mention these
+  case "$FILE" in
+    .githooks/*) continue ;;
+    CLAUDE.md|README.md) continue ;;
+    docs/*) continue ;;
+  esac
+
+  # Grep for forbidden patterns (case-sensitive, with line numbers)
+  MATCHES=$(grep -nE "$FORBIDDEN_PATTERNS" "$FILE" 2>/dev/null || true)
+
+  if [ -n "$MATCHES" ]; then
+    LEAKS_FOUND=$((LEAKS_FOUND + 1))
+    LEAK_DETAILS="$LEAK_DETAILS\n=== $FILE ===\n$MATCHES"
+  fi
+done
+
+if [ "$LEAKS_FOUND" -gt 0 ]; then
+  printf "❌ COMMIT BLOCKED: TRXC branding leak detected in %d file(s)\n" "$LEAKS_FOUND" >&2
+  printf "%b\n" "$LEAK_DETAILS" >&2
+  printf "\n" >&2
+  printf "These strings are reserved for TRXC and must NOT appear in ETC code:\n" >&2
+  printf "  rqq_sid, trxcqrr, tradityqrr, TRXC, @TradityQRR, store.trxcqrr.com\n" >&2
+  printf "\n" >&2
+  printf "If this is intentional (e.g. comparison documentation), add an exception\n" >&2
+  printf "in .githooks/pre-commit, or use the appropriate ETC equivalent:\n" >&2
+  printf "  rqq_sid       → etc_sid\n" >&2
+  printf "  trxcqrr       → evanstradingclass\n" >&2
+  printf "  TRXC          → ETC (atau Evans Trading Class)\n" >&2
+  printf "  @TradityQRR   → @ETCIndicator\n" >&2
+  printf "  store.trxcqrr.com → store.evanstradingclass.com\n" >&2
+  printf "\n" >&2
+  printf "To bypass (NOT recommended), use: git commit --no-verify\n" >&2
+  exit 1
+fi
+
+exit 0
