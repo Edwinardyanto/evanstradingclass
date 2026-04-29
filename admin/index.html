@@ -310,6 +310,26 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
   }
 }
 
+/* ─── Orders tab filter bar (Phase C2 PR3) ─────────────────── */
+.orders-filters {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin-bottom: 14px;
+}
+.orders-filters select,
+.orders-filters input[type="date"] {
+  padding: 6px 10px; font-size: 12px;
+}
+.of-group {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.of-lbl {
+  font-size: 11px; color: var(--muted); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.of-sep { color: var(--muted); font-size: 11px; }
+
 /* ─── Dashboard hero + action tiles (Phase C2 PR2) ─────────── */
 .cc-hero {
   background: var(--card); color: var(--white);
@@ -439,6 +459,7 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
     <div class="nav-tab" onclick="showPage('products')">Produk</div>
     <div class="nav-tab" onclick="showPage('subscribers')">Subscribers</div>
     <div class="nav-tab" onclick="showPage('transactions')">Transaksi</div>
+    <div class="nav-tab" onclick="showPage('orders')">Order</div>
     <div class="nav-tab" onclick="showPage('grant')">Manual Grant</div>
     <div class="nav-tab" onclick="showPage('affiliates')">Affiliates</div>
     <div class="nav-tab" onclick="showPage('traffic')">Traffic</div>
@@ -515,7 +536,7 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
 
     <!-- ACTION TILES -->
     <div class="cc-actions">
-      <div class="cc-act cc-act-red" id="cc-act-failed" onclick="showPage('transactions')">
+      <div class="cc-act cc-act-red" id="cc-act-failed" onclick="showPage('orders')">
         <span class="cc-act-badge cc-act-badge-red">Urgent</span>
         <div class="cc-act-icon cc-act-icon-red">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -709,6 +730,71 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
         </table>
       </div>
       <div id="transactions-pagination"></div>
+    </div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="page" id="page-orders">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Semua Order</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadAdminOrders()">↻ Refresh</button>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="orders-filters">
+        <select id="orders-f-payment-status" onchange="applyOrderFilter('payment_status', this.value)">
+          <option value="">Semua Payment</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
+        </select>
+        <select id="orders-f-product" onchange="applyOrderFilter('product_name', this.value)">
+          <option value="">Semua Produk</option>
+        </select>
+        <select id="orders-f-affiliate" onchange="applyOrderFilter('affiliate', this.value)">
+          <option value="">Semua Sumber</option>
+          <option value="affiliate">Affiliate</option>
+          <option value="non-affiliate">Non-Affiliate</option>
+        </select>
+        <select id="orders-f-payment-method" onchange="applyOrderFilter('payment_method', this.value)">
+          <option value="">Semua Metode</option>
+        </select>
+        <div class="of-group">
+          <span class="of-lbl">Created</span>
+          <input type="date" id="orders-f-created-from" onchange="applyOrderFilter('created_from', this.value)">
+          <span class="of-sep">–</span>
+          <input type="date" id="orders-f-created-to" onchange="applyOrderFilter('created_to', this.value)">
+        </div>
+        <div class="of-group">
+          <span class="of-lbl">Completed</span>
+          <input type="date" id="orders-f-completed-from" onchange="applyOrderFilter('completed_from', this.value)">
+          <span class="of-sep">–</span>
+          <input type="date" id="orders-f-completed-to" onchange="applyOrderFilter('completed_to', this.value)">
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="resetOrderFilters()">Reset</button>
+      </div>
+
+      <!-- SUMMARY -->
+      <div id="orders-summary" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
+
+      <!-- TABLE -->
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th class="hide-mobile">Order ID</th>
+            <th>Customer</th>
+            <th class="hide-mobile">Produk</th>
+            <th>Amount</th>
+            <th>Payment</th>
+            <th class="hide-mobile">Metode</th>
+            <th class="hide-mobile">Ref</th>
+            <th class="hide-mobile">Created</th>
+            <th>Aksi</th>
+          </tr></thead>
+          <tbody id="orders-table"><tr><td colspan="9" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+      <div id="orders-pagination"></div>
     </div>
   </div>
 
@@ -1196,11 +1282,12 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  const tabs = { dashboard:0, products:1, subscribers:2, transactions:3, grant:4, affiliates:5, traffic:6, promo:7 };
+  const tabs = { dashboard:0, products:1, subscribers:2, transactions:3, orders:4, grant:5, affiliates:6, traffic:7, promo:8 };
   document.querySelectorAll('.nav-tab')[tabs[name]]?.classList.add('active');
   if (name === 'products')     loadProducts();
   if (name === 'subscribers')  loadSubscribers();
   if (name === 'transactions') loadTransactions();
+  if (name === 'orders')       { populateOrderProductFilter(); loadAdminOrders(); }
   if (name === 'affiliates')   loadAffiliates();
   if (name === 'traffic')      loadAdminTraffic();
   if (name === 'promo')        loadPromos();
@@ -1594,6 +1681,144 @@ function _adminFmtRpFull(v) { return 'Rp ' + Math.round(v).toLocaleString('id-ID
 
 async function loadAdminCharts() {
   await Promise.all([loadAdminIncomeChart(), loadAdminFunnelChart()]);
+}
+
+// ── Orders tab (Phase C2 PR3) ────────────────────────────────────
+// Server-side filtered + paginated orders feed. State lives in this
+// module; filter changes always reset page to 1.
+const _orderFilters = {
+  payment_status: '',
+  product_name:   '',
+  affiliate:      '',
+  payment_method: '',
+  created_from:   '',
+  created_to:     '',
+  completed_from: '',
+  completed_to:   '',
+  page:  1,
+  limit: 50,
+};
+
+async function populateOrderProductFilter() {
+  try {
+    const { products } = await api('GET', '/admin/products');
+    const sel = document.getElementById('orders-f-product');
+    if (!sel || !products) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Semua Produk</option>' +
+      products.map(p => `<option value="${p.product_name}" ${p.product_name === cur ? 'selected' : ''}>${p.product_name}</option>`).join('');
+  } catch (e) { /* non-fatal — leave dropdown with placeholder option */ }
+}
+
+async function loadAdminOrders() {
+  const tbody = document.getElementById('orders-table');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading...</td></tr>';
+
+  const params = new URLSearchParams();
+  Object.entries(_orderFilters).forEach(([k, v]) => {
+    if (v !== '' && v !== null && v !== undefined) params.set(k, v);
+  });
+
+  try {
+    const data = await api('GET', '/admin/orders?' + params.toString());
+    renderOrdersTable(data.orders || [], data.payment_methods || [], Number(data.total || 0));
+    renderOrdersPagination(Number(data.page || 1), Number(data.total_pages || 1), Number(data.total || 0));
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderOrdersTable(orders, paymentMethods, total) {
+  // Refresh payment-method dropdown — keep current selection.
+  const pmSel = document.getElementById('orders-f-payment-method');
+  if (pmSel && paymentMethods) {
+    const cur = pmSel.value;
+    pmSel.innerHTML = '<option value="">Semua Metode</option>' +
+      paymentMethods.map(m => `<option value="${m}" ${m === cur ? 'selected' : ''}>${m}</option>`).join('');
+  }
+
+  const summaryEl = document.getElementById('orders-summary');
+  if (summaryEl) {
+    const paidCount = orders.filter(o => o.payment_status === 'paid').length;
+    summaryEl.textContent = `${total} order ditemukan · ${paidCount} paid (page ini)`;
+  }
+
+  const tbody = document.getElementById('orders-table');
+  if (!orders.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Belum ada order untuk filter ini</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = orders.map(o => {
+    const failed = ['failed','failed_no_username','failed_unknown_product','processing'].includes(o.tv_access_status);
+    const actions = failed
+      ? `<div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="retry('${o.scalev_order_id}')" title="Retry">↻</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${o.scalev_order_id}', '${o.tv_username || ''}')" style="color:var(--cyan)" title="Edit username">✎</button>
+         </div>`
+      : '';
+    const paymentBadge = o.payment_status === 'paid'
+      ? '<span class="badge badge-green">PAID</span>'
+      : (o.payment_status === 'unpaid' || o.payment_status === null || o.payment_status === undefined)
+        ? '<span class="badge badge-muted">unpaid</span>'
+        : `<span class="badge badge-muted">${o.payment_status}</span>`;
+    const refBadge = o.ref_code
+      ? `<span class="badge badge-cyan">${o.ref_code}</span>`
+      : '<span style="color:var(--muted)">—</span>';
+    const customerLine = o.customer_name || o.tv_username || '—';
+    const customerSub  = o.customer_email || '—';
+    return `<tr>
+      <td class="mono hide-mobile" style="font-size:11px">${o.scalev_order_id}</td>
+      <td><strong>${customerLine}</strong>
+          <div style="font-size:11px;color:var(--muted)">${customerSub}</div></td>
+      <td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.product_name || '—'}</td>
+      <td class="mono">Rp ${Number(o.amount || 0).toLocaleString('id-ID')}</td>
+      <td>${paymentBadge}</td>
+      <td class="hide-mobile" style="font-size:12px">${o.payment_method || '—'}</td>
+      <td class="hide-mobile">${refBadge}</td>
+      <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${fmtDate(o.created_at)}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderOrdersPagination(page, totalPages, total) {
+  const el = document.getElementById('orders-pagination');
+  if (!el) return;
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--muted)">Page ${page} of ${totalPages} · ${total} order total</span>
+      <div style="display:flex;gap:4px;margin-left:auto;">
+        <button class="btn btn-ghost btn-sm" onclick="goOrderPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
+        <button class="btn btn-ghost btn-sm" onclick="goOrderPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>Next ›</button>
+      </div>
+    </div>
+  `;
+}
+
+function goOrderPage(p) {
+  if (p < 1) return;
+  _orderFilters.page = p;
+  loadAdminOrders();
+}
+
+function applyOrderFilter(key, value) {
+  _orderFilters[key] = value;
+  _orderFilters.page = 1; // reset to page 1 on any filter change
+  loadAdminOrders();
+}
+
+function resetOrderFilters() {
+  Object.keys(_orderFilters).forEach(k => {
+    if (k !== 'page' && k !== 'limit') _orderFilters[k] = '';
+  });
+  _orderFilters.page = 1;
+  ['orders-f-payment-status','orders-f-product','orders-f-affiliate','orders-f-payment-method',
+   'orders-f-created-from','orders-f-created-to','orders-f-completed-from','orders-f-completed-to']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  loadAdminOrders();
 }
 
 // ── Dashboard Hero KPI cards (Phase C2 PR2) ──────────────────────
