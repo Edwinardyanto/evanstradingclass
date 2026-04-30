@@ -839,6 +839,7 @@ nav.legacy-nav { display: none !important; }
           </div>
           <div class="cc-period" id="admin-range-toggle">
             <button class="period-btn" onclick="setAdminRange(1,0,'Today',this)">Today</button>
+            <button class="period-btn" onclick="setAdminRange(1,1,'Yesterday',this)">Yesterday</button>
             <button class="period-btn" onclick="setAdminRange(7,0,'Last 7 days',this)">7D</button>
             <button class="period-btn active" onclick="setAdminRange(30,0,'Last 30 days',this)">30D</button>
           </div>
@@ -946,9 +947,9 @@ nav.legacy-nav { display: none !important; }
           <thead><tr>
             <th>Product Name</th>
             <th class="hide-mobile">Durasi</th>
-            <th class="hide-mobile">Variant</th>
-            <th class="hide-mobile">Harga</th>
             <th class="hide-mobile">Checkout URL</th>
+            <th class="hide-mobile">Variant ID</th>
+            <th class="hide-mobile">Price</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr></thead>
@@ -966,23 +967,24 @@ nav.legacy-nav { display: none !important; }
         <button class="btn btn-ghost btn-sm" onclick="loadSubscribers()">↻ Refresh</button>
       </div>
       <div style="margin-bottom:12px">
-        <input type="text" id="sub-search" placeholder="Cari TV username / email / no. HP..." style="width:300px" oninput="filterSubscribers()"/>
+        <input type="text" id="sub-search" placeholder="Cari nama / TV username / email / no. HP..." style="width:300px" oninput="filterSubscribers()"/>
       </div>
       <div id="subscribers-summary" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>TV Username</th>
+            <th>Nama</th>
             <th class="hide-mobile">Email</th>
             <th class="hide-mobile">No. HP</th>
-            <th class="hide-mobile">Latest Product</th>
-            <th class="hide-mobile">Expires</th>
-            <th class="hide-mobile">Total Transaksi</th>
             <th>Status</th>
+            <th class="hide-mobile">Plan</th>
+            <th class="hide-mobile">Expires</th>
+            <th class="hide-mobile">TV Username</th>
             <th>TV</th>
+            <th>Telegram</th>
             <th>Aksi</th>
           </tr></thead>
-          <tbody id="subscribers-table"><tr><td colspan="9" class="empty">Loading...</td></tr></tbody>
+          <tbody id="subscribers-table"><tr><td colspan="10" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
       <div id="subscribers-pagination"></div>
@@ -1241,30 +1243,28 @@ nav.legacy-nav { display: none !important; }
 
   <!-- ───── PAGE: PROMO ───── -->
   <div class="page" id="page-promo">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-      <div>
-        <h2 style="margin:0;font-size:18px;letter-spacing:1.5px;">PROMO CODES</h2>
-        <p style="margin:4px 0 0;font-size:12px;color:var(--muted);">Kelola kode promo untuk diskon checkout</p>
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Promo Codes</div>
+        <button class="btn btn-primary" onclick="openPromoModal()">+ Create Promo</button>
       </div>
-      <button class="btn btn-primary" onclick="openPromoModal()">+ Create Promo</button>
-    </div>
-
-    <div id="alert-promo" class="alert"></div>
-
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>CODE</th>
-          <th>TYPE</th>
-          <th>VALUE</th>
-          <th>USED/MAX</th>
-          <th class="hide-mobile">VALID UNTIL</th>
-          <th class="hide-mobile">PRODUCTS</th>
-          <th>STATUS</th>
-          <th>AKSI</th>
-        </tr></thead>
-        <tbody id="promo-tbody"><tr><td colspan="8" class="empty">Loading...</td></tr></tbody>
-      </table>
+      <div id="alert-promo" class="alert"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Code</th>
+            <th>Type</th>
+            <th>Discount</th>
+            <th>Used</th>
+            <th>Max Uses</th>
+            <th class="hide-mobile">Expires</th>
+            <th>Berlaku Untuk</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr></thead>
+          <tbody id="promo-tbody"><tr><td colspan="9" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -1536,6 +1536,7 @@ function showPage(name) {
   });
 
   // Per-tab data fetch hooks
+  if (name === 'dashboard')    loadDashboard();
   if (name === 'products')     loadProducts();
   if (name === 'subscribers')  loadSubscribers();
   if (name === 'orders')       { populateOrderProductFilter(); loadAdminOrders(); }
@@ -1605,9 +1606,9 @@ async function loadProducts() {
           return `<tr>
           <td><strong>${p.product_name}</strong></td>
           <td class="hide-mobile">${p.months ? p.months + ' bulan' : '<span style="color:var(--gold)">Lifetime</span>'}</td>
+          <td class="hide-mobile" style="font-size:11px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.checkout_url || '<span style="color:var(--border)">—</span>'}</td>
           <td class="hide-mobile" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);">${variantShort}</td>
           <td class="hide-mobile mono" style="font-size:12px;">${priceStr}</td>
-          <td class="hide-mobile" style="font-size:11px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.checkout_url || '<span style="color:var(--border)">—</span>'}</td>
           <td>
             <label class="toggle">
               <input type="checkbox" ${p.is_active ? 'checked' : ''} onchange="toggleProduct(${p.id}, this.checked)"/>
@@ -1705,6 +1706,7 @@ function filterSubscribers() {
   const q = document.getElementById('sub-search').value.toLowerCase();
   renderSubscribers(allSubscribers.filter(s =>
     s.tv_username.toLowerCase().includes(q) ||
+    (s.customer_name || '').toLowerCase().includes(q) ||
     (s.email || '').toLowerCase().includes(q) ||
     (s.phone || '').toLowerCase().includes(q)
   ));
@@ -1727,23 +1729,50 @@ function renderSubscribers(list) {
 
   document.getElementById('subscribers-table').innerHTML = paginated.length
     ? paginated.map(s => {
-        const expired = !s.is_lifetime && s.expires_at && new Date(s.expires_at) < now;
+        const expired   = !s.is_lifetime && s.expires_at && new Date(s.expires_at) < now;
+        const isActive  = !expired && s.is_active !== 0 && s.is_active !== false;
+        const statusBadge = isActive
+          ? '<span class="badge badge-green">Active</span>'
+          : (expired
+              ? '<span class="badge badge-red">Expired</span>'
+              : '<span class="badge badge-muted">Inactive</span>');
+        const tvGranted = s.tv_status === 'granted';
+        const tvFailed  = s.tv_status === 'failed';
+        const tvBadge = tvGranted
+          ? '<span class="badge badge-green">Granted</span>'
+          : (tvFailed ? '<span class="badge badge-red">Failed</span>' : '<span class="badge badge-muted">—</span>');
+        // Telegram status: backend currently does not track telegram_status
+        // for subscribers (G3 backend feature). Render placeholder so the
+        // column scaffolding lights up when data starts arriving.
+        const tgJoined = s.telegram_status === 'joined';
+        const tgKnown  = s.telegram_status !== undefined && s.telegram_status !== null;
+        const tgBadge = tgKnown
+          ? (tgJoined
+              ? '<span class="badge badge-green">Joined</span>'
+              : '<span class="badge badge-red">Not joined</span>')
+          : '<span class="badge badge-muted">—</span>';
+        const planLabel  = s.is_lifetime ? 'Lifetime' : (s.latest_product || '—');
         const expiresCell = s.is_lifetime
           ? '<span style="color:var(--gold);font-size:16px;font-weight:700;" title="Lifetime">∞</span>'
           : (s.expires_at ? fmtDate(s.expires_at) : '—');
+        // Customer name: backend /admin/subscribers does not currently
+        // join orders.customer_name — fall back to TV username so the
+        // column is never empty. Backend gap tracked for follow-up.
+        const namaLabel = s.customer_name || s.tv_username || '—';
         return `<tr>
-          <td><strong>${s.tv_username}</strong></td>
+          <td><strong>${namaLabel}</strong></td>
           <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${s.email || '—'}</td>
-          <td class="hide-mobile mono" style="font-size:12px;color:var(--muted)">${s.phone || '—'}</td>
-          <td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.latest_product || '—'}</td>
+          <td class="hide-mobile mono" style="font-size:11px;color:var(--muted)">${s.phone || '—'}</td>
+          <td>${statusBadge}</td>
+          <td class="hide-mobile" style="font-size:12px">${planLabel}</td>
           <td class="mono hide-mobile" style="font-size:12px">${expiresCell}</td>
-          <td class="mono hide-mobile">Rp ${Number(s.total_transaction||0).toLocaleString('id-ID')}</td>
-          <td>${expired ? '<span class="badge badge-red">Expired</span>' : s.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-muted">Inactive</span>'}</td>
-          <td>${s.tv_status === 'granted' ? '<span class="badge badge-green">GRANTED</span>' : s.tv_status === 'failed' ? '<span class="badge badge-red">FAILED</span>' : '—'}</td>
+          <td class="hide-mobile mono" style="font-size:12px">${s.tv_username || '—'}</td>
+          <td>${tvBadge}</td>
+          <td>${tgBadge}</td>
           <td><button class="btn btn-ghost btn-sm" onclick="viewSubscriber('${s.tv_username}')">Detail</button></td>
         </tr>`;
       }).join('')
-    : '<tr><td colspan="9" class="empty">Belum ada subscriber</td></tr>';
+    : '<tr><td colspan="10" class="empty">Belum ada subscriber</td></tr>';
 
   const paginationEl = document.getElementById('subscribers-pagination');
   if (paginationEl) {
@@ -1776,6 +1805,7 @@ function goSubPage(p) {
   const filtered = q
     ? allSubscribers.filter(s =>
         s.tv_username.toLowerCase().includes(q) ||
+        (s.customer_name||'').toLowerCase().includes(q) ||
         (s.email||'').toLowerCase().includes(q) ||
         (s.phone||'').toLowerCase().includes(q))
     : allSubscribers;
@@ -1870,12 +1900,12 @@ async function loadAdminCharts() {
   await Promise.all([loadAdminIncomeChart(), loadAdminFunnelChart(), loadAdminSoldProductsDonut()]);
 }
 
-// ── Sold Products donut (Phase F4) ────────────────────────────────
+// ── Sold Products donut (Phase F4, metric switched to COUNT in G2) ──
 // Client-side groupBy on /admin/transactions, filtered to paid/settled
-// orders inside the current _adminRange window. Aggregates revenue per
-// product_name, renders Chart.js doughnut + legend with %/Rp breakdown.
-// ETC palette derivatives: cyan + cyan2 + lifetime-purple + gold +
-// muted gray. Number() coercion on amount per BIGINT serialization rule.
+// orders inside the current _adminRange window. Aggregates ORDER COUNT
+// per product_name (G2: was revenue) and renders Chart.js doughnut +
+// legend with count/% breakdown. ETC palette derivatives: cyan + cyan2
+// + lifetime-purple + gold + muted gray.
 let _adminChartDonut = null;
 async function loadAdminSoldProductsDonut() {
   try {
@@ -1904,7 +1934,7 @@ async function loadAdminSoldProductsDonut() {
       if (!Number.isFinite(ts)) return;
       if (ts < fromMs || ts > toMs) return;
       const name = t.product_name || 'Other';
-      mix[name] = (mix[name] || 0) + Number(t.amount || 0);
+      mix[name] = (mix[name] || 0) + 1;
     });
 
     const mixArr = Object.entries(mix).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -1949,22 +1979,21 @@ async function loadAdminSoldProductsDonut() {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (item) => `${item.label}: Rp ${Math.round(Number(item.parsed) || 0).toLocaleString('id-ID')}`
+              label: (item) => `${item.label}: ${Number(item.parsed) || 0} order`
             }
           }
         }
       }
     });
 
-    listEl.innerHTML = mixArr.map(([name, value], i) => {
-      const pct = Math.round(value / total * 100);
-      const rp  = 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
+    listEl.innerHTML = mixArr.map(([name, count], i) => {
+      const pct = Math.round(count / total * 100);
       const swatch = palette[i] || '#6B7280';
       return `
         <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
           <span style="width:8px;height:8px;background:${swatch};border-radius:2px;flex-shrink:0;"></span>
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
-          <span style="font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:11px;">${rp}</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:11px;">${count}</span>
           <span style="font-weight:600;width:36px;text-align:right;">${pct}%</span>
         </div>`;
     }).join('');
@@ -1988,40 +2017,42 @@ const _orderFilters = {
   limit: 50,
 };
 
-// Column registry. `optional: false` cols are always shown; `optional:
-// true` cols are toggleable via the column picker. Render order = array
-// order; non-optional cols can't be toggled off.
+// Column registry — 100% TRXC-side default match (G2). Optional cols
+// align with TRXC-side's column picker set. Aksi column is ETC-specific
+// (kept for retry/edit on failed rows; TRXC-side dropped it). Expires
+// is also ETC-specific (carried over from the dropped Transaksi tab).
+//
+// `optional: false` cols are always shown; `optional: true` cols are
+// toggleable via the column picker.
 const ORDERS_COLS = [
-  { key: 'order_id',  label: 'Order ID', optional: false, mobileHide: true,  cell: o => `<td class="mono hide-mobile" style="font-size:11px">${o.scalev_order_id}</td>` },
-  { key: 'customer',  label: 'Customer', optional: false, mobileHide: false, cell: o => {
-      const line = o.customer_name || o.tv_username || '—';
-      const sub  = o.customer_email || '—';
-      return `<td><strong>${line}</strong><div style="font-size:11px;color:var(--muted)">${sub}</div></td>`;
-    } },
-  { key: 'phone',     label: 'No. HP',   optional: true,  mobileHide: true,  defaultOn: true, cell: o => `<td class="hide-mobile mono" style="font-size:12px;color:var(--muted)">${o.customer_phone || '—'}</td>` },
-  { key: 'product',   label: 'Produk',   optional: false, mobileHide: true,  cell: o => `<td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.product_name || '—'}</td>` },
-  { key: 'amount',    label: 'Amount',   optional: false, mobileHide: false, cell: o => `<td class="mono">Rp ${Number(o.amount || 0).toLocaleString('id-ID')}</td>` },
-  { key: 'payment',   label: 'Payment',  optional: false, mobileHide: false, cell: o => {
+  { key: 'order_id',    label: 'Order ID',    optional: false, mobileHide: true,  cell: o => `<td class="mono hide-mobile" style="font-size:10px">${o.scalev_order_id}</td>` },
+  { key: 'name',        label: 'Nama',        optional: false, mobileHide: false, cell: o => `<td style="font-size:13px"><strong>${o.customer_name || o.tv_username || '—'}</strong></td>` },
+  { key: 'email',       label: 'Email',       optional: false, mobileHide: false, cell: o => `<td style="font-size:11px;color:var(--muted)">${o.customer_email || '—'}</td>` },
+  { key: 'phone',       label: 'No. HP',      optional: false, mobileHide: true,  cell: o => `<td class="hide-mobile mono" style="font-size:11px;color:var(--muted)">${o.customer_phone || '—'}</td>` },
+  { key: 'product',     label: 'Produk',      optional: false, mobileHide: true,  cell: o => `<td class="hide-mobile" style="font-size:11px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.product_name || '—'}</td>` },
+  { key: 'amount',      label: 'Amount',      optional: false, mobileHide: false, cell: o => `<td class="mono" style="font-size:12px">Rp ${Number(o.amount || 0).toLocaleString('id-ID')}</td>` },
+  { key: 'payment',     label: 'Payment',     optional: false, mobileHide: false, cell: o => {
       const s = o.payment_status;
       if (s === 'paid')   return '<td><span class="badge badge-green">PAID</span></td>';
       if (s === 'unpaid' || s === null || s === undefined)
                           return '<td><span class="badge badge-muted">unpaid</span></td>';
       return `<td><span class="badge badge-muted">${s}</span></td>`;
     } },
-  { key: 'method',    label: 'Metode',   optional: true,  mobileHide: true,  defaultOn: true, cell: o => `<td class="hide-mobile" style="font-size:12px">${o.payment_method || '—'}</td>` },
-  { key: 'ref',       label: 'Ref',      optional: true,  mobileHide: true,  defaultOn: true, cell: o => o.ref_code
+  { key: 'created',     label: 'Created At',  optional: false, mobileHide: true,  sortable: true, cell: o => `<td class="hide-mobile mono" style="font-size:11px;color:var(--muted)">${o.created_at ? fmtDate(o.created_at) : '—'}</td>` },
+  { key: 'method',      label: 'Metode',      optional: true,  mobileHide: true,  defaultOn: false, cell: o => `<td class="hide-mobile" style="font-size:11px;color:var(--muted)">${o.payment_method || '—'}</td>` },
+  { key: 'ref',         label: 'Ref',         optional: true,  mobileHide: true,  defaultOn: false, cell: o => o.ref_code
       ? `<td class="hide-mobile"><span class="badge badge-cyan">${o.ref_code}</span></td>`
       : '<td class="hide-mobile"><span style="color:var(--muted)">—</span></td>' },
-  { key: 'created',   label: 'Created',  optional: true,  mobileHide: true,  defaultOn: true, sortable: true, cell: o => `<td class="hide-mobile" style="font-size:12px;color:var(--muted)">${fmtDate(o.created_at)}</td>` },
-  { key: 'expires',   label: 'Expires',  optional: true,  mobileHide: true,  defaultOn: false, cell: o => {
-      if (o.is_lifetime) return '<td class="hide-mobile" style="font-size:14px;font-weight:700;color:var(--gold)">∞</td>';
-      return `<td class="hide-mobile" style="font-size:12px;color:var(--muted)">${o.expires_at ? fmtDate(o.expires_at) : '—'}</td>`;
-    } },
-  { key: 'paid_at',   label: 'Paid At',  optional: true,  mobileHide: true,  defaultOn: false, cell: o => `<td class="hide-mobile" style="font-size:12px;color:var(--muted)">${o.completed_at ? fmtDate(o.completed_at) : '—'}</td>` },
-  { key: 'promo',     label: 'Promo',    optional: true,  mobileHide: true,  defaultOn: false, cell: o => o.promo_code
+  { key: 'paid_at',     label: 'Paid At',     optional: true,  mobileHide: true,  defaultOn: false, cell: o => `<td class="hide-mobile mono" style="font-size:11px;color:var(--muted)">${o.completed_at ? fmtDate(o.completed_at) : '—'}</td>` },
+  { key: 'promo',       label: 'Promo',       optional: true,  mobileHide: true,  defaultOn: false, cell: o => o.promo_code
       ? `<td class="hide-mobile"><span class="badge badge-muted">${o.promo_code}</span></td>`
       : '<td class="hide-mobile"><span style="color:var(--muted)">—</span></td>' },
-  { key: 'actions',   label: 'Aksi',     optional: false, mobileHide: false, cell: o => {
+  { key: 'tv_username', label: 'TV Username', optional: true,  mobileHide: true,  defaultOn: false, cell: o => `<td class="hide-mobile mono" style="font-size:11px;color:var(--muted)">${o.tv_username || '—'}</td>` },
+  { key: 'expires',     label: 'Expires',     optional: true,  mobileHide: true,  defaultOn: false, cell: o => {
+      if (o.is_lifetime) return '<td class="hide-mobile" style="font-size:14px;font-weight:700;color:var(--gold)">∞</td>';
+      return `<td class="hide-mobile" style="font-size:11px;color:var(--muted)">${o.expires_at ? fmtDate(o.expires_at) : '—'}</td>`;
+    } },
+  { key: 'actions',     label: 'Aksi',        optional: false, mobileHide: false, cell: o => {
       const failed = ['failed','failed_no_username','failed_unknown_product','processing'].includes(o.tv_access_status);
       if (!failed) return '<td></td>';
       return `<td><div style="display:flex;gap:4px;">
@@ -2480,14 +2511,37 @@ async function loadAdminFunnelChart() {
 // {summary, daily, by_product}) instead of TRXC-side /admin/stats/daily.
 // Field renames: data.daily (was income[]); per-row d.revenue + d.orders
 // (was income + tx_count); summary.{total_revenue, total_orders,
-// pending_revenue, pending_orders}. Drops the offset query param.
+// pending_revenue, pending_orders}.
+//
+// Offset support (G2): /admin/income takes only `days`, no offset. To
+// power the Yesterday button, we request `days + offset` rows and slice
+// off the trailing `offset` entries (today's row when offset=1). The
+// legend totals are recomputed locally from the trimmed array; the
+// pending/income summary cards stay global by design.
 async function loadAdminIncomeChart() {
   if (typeof Chart === 'undefined') return;
   const gridColor = 'rgba(255,255,255,0.06)';
   const tickColor = '#888';
   try {
-    const data = await api('GET', '/admin/income?days=' + _adminRange.days);
-    const days = data.daily || [];
+    const offset = Number(_adminRange.offset || 0);
+    const fetchDays = _adminRange.days + offset;
+    const data = await api('GET', '/admin/income?days=' + fetchDays);
+    const allDays = data.daily || [];
+    let days = allDays;
+    if (offset > 0) {
+      // Filter by date range when offset > 0 — slicing by index breaks
+      // when the server skips empty days.
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const to = new Date(today); to.setDate(to.getDate() - offset);
+      const from = new Date(to);  from.setDate(from.getDate() - (_adminRange.days - 1));
+      const fromMs = from.getTime();
+      const toMs   = to.getTime() + 86400000 - 1;
+      days = allDays.filter(d => {
+        const ts = new Date(d.date).getTime();
+        return ts >= fromMs && ts <= toMs;
+      });
+    }
     const labels = days.map(d => {
       const dt = new Date(d.date);
       return String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0');
@@ -2934,44 +2988,58 @@ function closePromoModal() { document.getElementById('promo-modal').style.displa
 
 async function loadPromos() {
   const tbody = document.getElementById('promo-tbody');
-  tbody.innerHTML = '<tr><td colspan="8" class="empty">Loading...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading...</td></tr>';
   try {
     const { promo_codes } = await api('GET', '/admin/promo-codes');
     if (!promo_codes.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty">Belum ada promo code</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">Belum ada promo code</td></tr>';
       return;
     }
     tbody.innerHTML = promo_codes.map(p => {
-      const valStr = p.discount_type === 'percentage'
+      const discountLabel = p.discount_type === 'percentage'
         ? parseFloat(p.discount_value) + '%'
         : 'Rp ' + parseInt(p.discount_value).toLocaleString('id-ID');
-      const usedStr = (p.used_count || 0) + '/' + (p.max_uses || '∞');
-      const untilStr = p.valid_until ? fmtDate(p.valid_until) : '—';
+      const typeLabel = p.discount_type === 'percentage' ? 'Percentage' : 'Fixed';
+      const usedCount = Number(p.used_count || 0);
+      const maxUses   = p.max_uses ? Number(p.max_uses) : null;
+      const maxLabel  = maxUses === null ? '<span style="color:var(--gold);font-weight:700">∞</span>' : maxUses;
+      const untilStr  = p.valid_until ? fmtDate(p.valid_until) : '—';
       const productsStr = p.applicable_products && p.applicable_products.length
         ? p.applicable_products.map(x => '<span class="badge badge-muted" style="font-size:9px;margin:1px;">' + x + '</span>').join('')
         : '<span style="font-size:11px;color:var(--muted);">Semua</span>';
       const statusBadge = p.is_active
-        ? '<span class="badge" style="background:rgba(74,222,128,.15);color:var(--green);font-size:10px;">Active</span>'
-        : '<span class="badge badge-muted" style="font-size:10px;">Inactive</span>';
+        ? '<span class="badge badge-green">Active</span>'
+        : '<span class="badge badge-muted">Inactive</span>';
       const safePromo = JSON.stringify(p).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
       return `<tr>
-        <td><span class="badge badge-cyan" style="font-family:'JetBrains Mono',monospace;font-size:11px;">${p.code}</span></td>
-        <td style="font-size:12px;">${p.discount_type}</td>
-        <td class="mono" style="font-size:12px;">${valStr}</td>
-        <td class="mono" style="font-size:12px;">${usedStr}</td>
+        <td><span class="mono" style="color:var(--cyan);font-weight:600;font-size:12px;">${p.code}</span></td>
+        <td style="color:var(--muted);font-size:12px;">${typeLabel}</td>
+        <td class="mono" style="font-size:12px;color:var(--gold);font-weight:600;">${discountLabel}</td>
+        <td class="mono" style="font-size:12px;">${usedCount}</td>
+        <td class="mono" style="font-size:12px;color:var(--muted);">${maxLabel}</td>
         <td class="hide-mobile" style="font-size:11px;color:var(--muted);">${untilStr}</td>
-        <td class="hide-mobile">${productsStr}</td>
+        <td>${productsStr}</td>
         <td>${statusBadge}</td>
         <td style="white-space:nowrap;">
-          <button class="btn btn-ghost btn-sm" onclick='openPromoModal(JSON.parse(this.dataset.p))' data-p="${safePromo}">Edit</button>
-          <button class="btn btn-danger btn-sm" style="margin-left:4px;" onclick="deletePromo('${p.id}')">Hapus</button>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-ghost btn-sm" onclick='openPromoModal(JSON.parse(this.dataset.p))' data-p="${safePromo}">Edit</button>
+            <button class="btn btn-ghost btn-sm" onclick="togglePromo('${p.id}', ${p.is_active ? 'true' : 'false'})">${p.is_active ? 'Off' : 'On'}</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePromo('${p.id}')">Del</button>
+          </div>
         </td>
       </tr>`;
     }).join('');
   } catch (e) {
     showAlert('promo', e.message, 'error');
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">Gagal memuat data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Gagal memuat data</td></tr>';
   }
+}
+
+async function togglePromo(id, currentlyActive) {
+  try {
+    await api('PATCH', `/admin/promo-codes/${id}`, { is_active: !currentlyActive });
+    loadPromos();
+  } catch (e) { showAlert('promo', e.message, 'error'); }
 }
 
 async function savePromo() {
