@@ -454,6 +454,44 @@ nav.legacy-nav { display: none !important; }
 .sort-btn:hover { color: var(--cyan); }
 .sort-arrow { font-size: 10px; opacity: 0.6; }
 
+/* ─── Dashboard topbar (Phase G3) ──────────────────────────── */
+.cc-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.cc-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--white); }
+.cc-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cc-search {
+  flex: 1; max-width: 380px; margin-left: 24px;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; color: var(--muted); font-size: 13px;
+  transition: border-color .15s, background .15s;
+}
+.cc-search:focus-within { border-color: var(--cyan2); background: var(--card2); }
+.cc-search svg { color: var(--muted); flex-shrink: 0; }
+.cc-search input {
+  flex: 1; background: transparent; border: 0; outline: 0;
+  color: var(--white); font: inherit;
+}
+.cc-search input::placeholder { color: var(--muted); }
+.cc-kbd {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted);
+  border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px;
+  white-space: nowrap;
+}
+.cc-icon-btn {
+  width: 36px; height: 36px; border: 1px solid var(--border); background: var(--card);
+  border-radius: 8px; display: grid; place-items: center; cursor: pointer;
+  color: var(--white); position: relative; transition: border-color .15s, background .15s;
+}
+.cc-icon-btn:hover { border-color: var(--cyan2); background: var(--card2); }
+.cc-icon-dot {
+  position: absolute; top: 6px; right: 7px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--red); border: 1.5px solid var(--card);
+}
+@media (max-width: 960px) {
+  .cc-topbar { flex-wrap: wrap; }
+  .cc-search { order: 10; max-width: 100%; margin-left: 0; width: 100%; }
+}
+
 /* ─── Dashboard hero + action tiles (Phase C2 PR2) ─────────── */
 .cc-hero {
   background: var(--card); color: var(--white);
@@ -750,6 +788,27 @@ nav.legacy-nav { display: none !important; }
 
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
+
+    <!-- TOPBAR (Phase G3) -->
+    <div class="cc-topbar">
+      <div>
+        <div class="cc-title">Overview</div>
+        <div class="cc-sub" id="cc-sub">Memuat data…</div>
+      </div>
+      <label class="cc-search" for="cc-search-input">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="cc-search-input" type="search" placeholder="Cari order, TV username, affiliate…" oninput="onDashboardSearch(this.value)" />
+        <span class="cc-kbd">⌘K</span>
+      </label>
+      <button class="cc-icon-btn" type="button" title="Notifications" onclick="onDashboardNotificationsClick()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="cc-icon-dot" id="cc-notif-dot" hidden></span>
+      </button>
+      <button class="cc-icon-btn" type="button" onclick="loadDashboard()" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+    </div>
+
     <!-- HERO REVENUE (Phase C2 PR2) -->
     <div class="cc-hero">
       <svg class="cc-hero-spark" viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true">
@@ -1550,8 +1609,62 @@ function loadAll() {
   loadSubscribers();
 }
 
+// ── Dashboard topbar (Phase G3) ───────────────────────────────────
+// Renders the Overview subtitle "<weekday>, <DD> <month-id> <YYYY> ·
+// sinkron <relative>" using the stamp captured at the start of every
+// loadDashboard() call. Called both immediately (on load) and at a 30s
+// interval so the relative-time string stays fresh between refreshes.
+let _ccLastSyncMs = null;
+let _ccSyncTimer  = null;
+
+function _ccRelativeAgo(diffMs) {
+  if (diffMs < 30 * 1000)         return 'baru saja';
+  if (diffMs < 60 * 1000)         return Math.floor(diffMs / 1000) + ' detik lalu';
+  if (diffMs < 60 * 60 * 1000)    return Math.floor(diffMs / 60000) + ' menit lalu';
+  if (diffMs < 24 * 3600 * 1000)  return Math.floor(diffMs / 3600000) + ' jam lalu';
+  return Math.floor(diffMs / 86400000) + ' hari lalu';
+}
+function renderDashboardSubtitle() {
+  const subEl = document.getElementById('cc-sub');
+  if (!subEl) return;
+  const now = new Date();
+  const hari  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][now.getDay()];
+  const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][now.getMonth()];
+  const dateStr = `${hari}, ${now.getDate()} ${bulan} ${now.getFullYear()}`;
+  const syncStr = _ccLastSyncMs
+    ? 'sinkron ' + _ccRelativeAgo(now.getTime() - _ccLastSyncMs)
+    : 'memuat…';
+  subEl.textContent = `${dateStr} · ${syncStr}`;
+}
+
+// Search scaffold — backend has no /admin/search endpoint yet (G3
+// backend gap). UI is wired so the input doesn't feel dead; once a
+// search endpoint exists, hook the actual fetch here.
+function onDashboardSearch(q) {
+  // No-op until backend search lands. Logged for debugging only.
+  if (q && q.length >= 2) console.debug('[search scaffold]', q);
+}
+function onDashboardNotificationsClick() {
+  // Notifications panel scaffold — SSE/badge integration deferred.
+  console.debug('[notifications scaffold]');
+}
+
+// ⌘K / Ctrl-K focuses the search input.
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    const input = document.getElementById('cc-search-input');
+    if (input) { e.preventDefault(); input.focus(); input.select(); }
+  }
+});
+
 // ── Dashboard ─────────────────────────────────────────────────────
 async function loadDashboard() {
+  // Stamp + start the topbar relative-time refresh on every reload.
+  _ccLastSyncMs = Date.now();
+  renderDashboardSubtitle();
+  if (_ccSyncTimer) clearInterval(_ccSyncTimer);
+  _ccSyncTimer = setInterval(renderDashboardSubtitle, 30 * 1000);
+
   try {
     const txs = await api('GET', '/admin/transactions');
 
