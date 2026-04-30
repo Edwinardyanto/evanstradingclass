@@ -152,49 +152,60 @@ nav {
 .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; }
 
 /* TABLE */
-.table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.table-wrap {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-sm);
+}
 table { width: 100%; border-collapse: collapse; }
 th {
-  text-align: left; padding: 12px 16px;
-  font-size: 10px; font-family: 'JetBrains Mono', monospace;
-  color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase;
+  text-align: left; padding: 11px 16px;
+  font-size: 10px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
   border-bottom: 1px solid var(--border); background: var(--card2);
 }
 td {
-  padding: 12px 16px; font-size: 13px;
-  border-bottom: 1px solid rgba(255,255,255,.04);
+  padding: 12px 16px; font-size: 13px; color: var(--white);
+  border-bottom: 1px solid var(--border);
 }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(255,255,255,.02); }
+tr:hover td { background: var(--card2); }
 .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 .badge {
   display: inline-flex; align-items: center;
-  padding: 3px 10px; border-radius: 100px;
-  font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+  padding: 2px 9px; border-radius: 100px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  font-family: 'JetBrains Mono', monospace;
 }
+/* badge-green keeps ETC's literal --green for semantic status (active /
+   granted / paid). Only the rgba bg gets a var-aligned form. badge-cyan
+   stays brand-accent (cyan) so green and cyan remain distinct. */
 .badge-green  { background: rgba(0,212,138,.15); color: var(--green); }
-.badge-red    { background: rgba(255,68,68,.15);  color: var(--red); }
-.badge-yellow { background: rgba(245,200,66,.15); color: var(--gold); }
-.badge-cyan   { background: rgba(0,200,215,.15);  color: var(--cyan); }
-.badge-muted  { background: rgba(74,112,128,.15); color: var(--muted); }
+.badge-red    { background: var(--red-soft);    color: var(--red); }
+.badge-yellow { background: var(--gold-soft);   color: var(--gold); }
+.badge-cyan   { background: var(--accent-soft); color: var(--cyan); }
+.badge-muted  { background: var(--card2); color: var(--muted); border: 1px solid var(--border); }
 
 /* FORMS */
-.form-row { display: grid; gap: 16px; margin-bottom: 16px; }
+.form-row { display: grid; gap: 14px; margin-bottom: 14px; }
 .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
 .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 label { font-size: 12px; color: var(--muted); font-weight: 500; }
 input, select, textarea {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 8px; padding: 10px 14px;
-  color: var(--white); font-size: 13px; font-family: 'DM Sans', sans-serif;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 7px; padding: 9px 12px; width: 100%;
+  color: var(--ink); font-size: 13px; font-family: 'DM Sans', sans-serif;
   transition: border-color .15s, box-shadow .15s; outline: none;
 }
 input:focus, select:focus, textarea:focus {
-  border-color: var(--cyan2);
-  box-shadow: 0 0 0 3px rgba(0,200,215,0.18);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
-select option { background: var(--bg2); }
+input[type="date"], input[type="datetime-local"] {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+}
+select option { background: var(--card); color: var(--ink); }
 .btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(0,200,215,0.28);
@@ -202,17 +213,19 @@ select option { background: var(--bg2); }
 
 /* BUTTONS */
 .btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 9px 18px; border-radius: 8px; font-size: 13px;
-  font-weight: 600; cursor: pointer; border: none;
-  transition: all .2s; font-family: 'DM Sans', sans-serif;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 16px; border-radius: 7px; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: 1px solid transparent;
+  white-space: nowrap; user-select: none;
+  transition: all .15s; font-family: 'DM Sans', sans-serif;
 }
-.btn-primary { background: var(--cyan2); color: var(--bg); }
-.btn-primary:hover { background: var(--cyan); }
-.btn-danger  { background: rgba(255,68,68,.15); color: var(--red); border: 1px solid rgba(255,68,68,.2); }
-.btn-danger:hover { background: rgba(255,68,68,.25); }
-.btn-ghost   { background: rgba(255,255,255,.05); color: var(--white); border: 1px solid var(--border); }
-.btn-ghost:hover { background: rgba(255,255,255,.1); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: #04120A; }
+.btn-primary:hover { background: var(--accent-deep); }
+.btn-danger  { background: var(--red-soft); color: var(--red); border-color: var(--red-soft); }
+.btn-danger:hover { background: var(--red); color: #fff; }
+.btn-ghost   { background: var(--card); color: var(--ink); border-color: var(--border); }
+.btn-ghost:hover { background: var(--card2); border-color: var(--border2); }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
 
 /* MODAL */
@@ -235,34 +248,44 @@ select option { background: var(--bg2); }
 
 /* ALERT */
 .alert {
-  padding: 12px 16px; border-radius: 8px; font-size: 13px;
-  margin-bottom: 16px; display: none;
+  padding: 11px 14px; border-radius: 8px; font-size: 13px;
+  font-weight: 500; margin-bottom: 14px; display: none;
 }
 .alert.show { display: block; }
-.alert-success { background: rgba(0,212,138,.1); border: 1px solid rgba(0,212,138,.2); color: var(--green); }
-.alert-error   { background: rgba(255,68,68,.1);  border: 1px solid rgba(255,68,68,.2);  color: var(--red); }
+/* alert-success keeps ETC's semantic --green (NOT brand --accent/cyan)
+   so success messages stay green even though Phase F1 mapped --accent
+   to cyan. alert-error pairs symmetrically with --red. */
+.alert-success {
+  background: rgba(0,212,138,.1); color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
+}
+.alert-error {
+  background: var(--red-soft); color: var(--red);
+  border: 1px solid color-mix(in srgb, var(--red) 30%, transparent);
+}
 
 /* EMPTY */
-.empty { text-align: center; padding: 48px; color: var(--muted); font-size: 13px; }
+.empty { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 13px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* TOGGLE */
 .toggle {
-  position: relative; width: 36px; height: 20px;
+  position: relative; width: 34px; height: 20px;
   display: inline-block; cursor: pointer;
 }
 .toggle input { opacity: 0; width: 0; height: 0; }
 .toggle-slider {
-  position: absolute; inset: 0; background: var(--border);
+  position: absolute; inset: 0; background: var(--border2);
   border-radius: 20px; transition: .2s;
 }
 .toggle-slider:before {
   content: ''; position: absolute;
   width: 14px; height: 14px; left: 3px; top: 3px;
-  background: white; border-radius: 50%; transition: .2s;
+  background: #fff; border-radius: 50%; transition: .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
 }
-input:checked + .toggle-slider { background: var(--cyan2); }
-input:checked + .toggle-slider:before { transform: translateX(16px); }
+input:checked + .toggle-slider { background: var(--accent); }
+input:checked + .toggle-slider:before { transform: translateX(14px); }
 
 /* ─── F2: APP SHELL (sidebar + main grid) ───────────────────── */
 /* #app starts hidden; JS sets style.display='block' after login. We use a
@@ -480,35 +503,37 @@ nav.legacy-nav { display: none !important; }
   }
 }
 
-/* ─── Orders tab filter bar (Phase C2 PR3) ─────────────────── */
+/* ─── Orders tab filter bar (Phase C2 PR3, polished G4 + H2) ─── */
 .orders-filters {
-  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
   margin-bottom: 14px;
 }
 .orders-filters select,
 .orders-filters input[type="date"] {
-  padding: 5px 12px; font-size: 12px; height: 28px;
-  border-radius: 999px; background: var(--card);
+  padding: 5px 8px; font-size: 12px; height: 28px;
+  border-radius: 999px; background: var(--card); width: auto;
 }
+.orders-filters select { max-width: 140px; }
 .orders-filters select:hover,
 .orders-filters input[type="date"]:hover { border-color: var(--cyan2); }
 .of-group {
   display: flex; align-items: center; gap: 6px; height: 28px;
-  padding: 0 12px; background: var(--card); border: 1px solid var(--border);
+  padding: 0 8px 0 10px; background: var(--card); border: 1px solid var(--border);
   border-radius: 999px;
 }
 .of-group:hover { border-color: var(--cyan2); }
 .of-group input[type="date"] {
   height: auto; padding: 0; border: 0; background: transparent;
+  width: 108px;
 }
 .of-group input[type="date"]:focus { box-shadow: none; }
 .of-lbl {
-  font-size: 11px; color: var(--muted); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 10px; color: var(--muted); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
 .of-sep { color: var(--muted); font-size: 11px; }
 .orders-filters .btn-sm {
-  height: 28px; padding: 0 14px; border-radius: 999px;
+  height: 28px; padding: 0 10px; border-radius: 999px;
 }
 .of-cols-wrap { position: relative; }
 .of-cols-panel {
