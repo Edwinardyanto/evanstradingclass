@@ -18,7 +18,10 @@
   --cyan2: #18B0C0;
   --cyan3: #0A4A52;
   --white: #EEF6FF;
-  --muted: #4A7080;
+  /* Phase H1 — retuned from #4A7080 to #8B95A5. The original was too
+     dim against --bg2 cards; cc-hero-label and similar subtle text
+     read as borderline-illegible. Matches reference's dark-theme value. */
+  --muted: #8B95A5;
   --subtle: #5B6676;
   --red: #FF4444;
   --green: #00D48A;
@@ -35,15 +38,29 @@
   --red-soft:    rgba(255,68,68,.12);
   --ink:         var(--white);
   --ink-soft:    #D4D4CE;
+  /* Phase H1 — sidebar tokens. Indirection so future sidebar theme
+     tweaks are one-line. Currently mapped to existing values; ETC is
+     dark-only (light-mode swap deferred to a possible H5). */
+  --sidebar-bg:    var(--bg2);
+  --sidebar-ink:   var(--white);
+  --sidebar-muted: var(--muted);
+  --sidebar-hover: var(--card);
   --shadow-sm:   0 1px 2px rgba(0,0,0,.3);
   --shadow-md:   0 2px 8px rgba(0,0,0,.4);
 }
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
 body {
   background: var(--bg); color: var(--white);
   font-family: 'DM Sans', sans-serif; min-height: 100vh;
+  /* Phase H1 — declare 14px base (was implicit 16px). Reference uses
+     14px so the rest of the type scale (10/11/12/13/14) reads at the
+     intended ratio without per-component overrides. */
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  /* Forward-compat for a possible H5 light-theme swap. */
+  transition: background .25s ease, color .25s ease;
 }
 
 /* NAV */
@@ -112,7 +129,7 @@ nav {
 .login-box > p { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
 
 /* LAYOUT */
-#app { display: none; }
+#app { display: none; min-height: 100vh; }
 .page { display: none; padding: 32px; max-width: 1200px; margin: 0 auto; }
 .page.active { display: block; }
 
@@ -351,7 +368,9 @@ nav.legacy-nav { display: none !important; }
   #app[style*="display: grid"],
   #app[style*="display:grid"] { grid-template-columns: 1fr !important; }
   .sidebar { display: none; }
-  .main { padding: 14px 12px 76px; }
+  /* Phase H1 — match reference: 16px/14px sides + 80px bottom (60px
+     bottom-nav + 20px gap). Was 14px/12px/76px — bottom was 4px short. */
+  .main { padding: 16px 14px 80px; }
 }
 
 /* ── F6 MOBILE BOTTOM NAV ──────────────────────────────────── */
