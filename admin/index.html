@@ -167,14 +167,21 @@ tr:hover td { background: rgba(255,255,255,.02); }
 .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 label { font-size: 12px; color: var(--muted); font-weight: 500; }
-input, select {
+input, select, textarea {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: 8px; padding: 10px 14px;
   color: var(--white); font-size: 13px; font-family: 'DM Sans', sans-serif;
-  transition: border-color .2s; outline: none;
+  transition: border-color .15s, box-shadow .15s; outline: none;
 }
-input:focus, select:focus { border-color: var(--cyan2); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--cyan2);
+  box-shadow: 0 0 0 3px rgba(0,200,215,0.18);
+}
 select option { background: var(--bg2); }
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,200,215,0.28);
+}
 
 /* BUTTONS */
 .btn {
@@ -194,8 +201,10 @@ select option { background: var(--bg2); }
 /* MODAL */
 .modal-overlay {
   display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.7); z-index: 1000;
+  background: rgba(0,0,0,.55); z-index: 1000;
   align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .modal-overlay.open { display: flex; }
 .modal {
@@ -374,6 +383,43 @@ nav.legacy-nav { display: none !important; }
   .admin-bottom-nav-item.active { color: var(--cyan); }
   .admin-bottom-nav-item svg { width: 17px; height: 17px; }
 
+  /* More-sheet overflow (Phase G4) — bottom-sheet for hidden tabs. */
+  .more-sheet-backdrop {
+    position: fixed; inset: 0; z-index: 210;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .more-sheet-backdrop[hidden] { display: none; }
+  .more-sheet {
+    position: fixed; left: 0; right: 0; bottom: 60px; z-index: 220;
+    background: var(--card); border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    padding: 8px 12px 12px;
+    display: flex; flex-direction: column; gap: 4px;
+    box-shadow: 0 -8px 24px rgba(0,0,0,.4);
+    animation: more-sheet-up .18s ease-out;
+  }
+  .more-sheet[hidden] { display: none; }
+  @keyframes more-sheet-up {
+    from { transform: translateY(8px); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+  .more-sheet-handle {
+    width: 36px; height: 3px; border-radius: 2px;
+    background: var(--border2); margin: 4px auto 8px;
+  }
+  .more-sheet-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 10px;
+    background: transparent; border: 0; color: var(--white);
+    font: 500 14px 'DM Sans', sans-serif; text-align: left; cursor: pointer;
+  }
+  .more-sheet-item:hover { background: var(--card2); }
+  .more-sheet-item svg { color: var(--muted); flex-shrink: 0; }
+}
+@media (min-width: 961px) {
+  .more-sheet, .more-sheet-backdrop { display: none !important; }
+
   /* pages now live inside .main; .main supplies padding (incl. bottom for
      the fixed bottom-nav). page-level padding zeroed. */
   .page { padding: 0 !important; }
@@ -422,18 +468,29 @@ nav.legacy-nav { display: none !important; }
 }
 .orders-filters select,
 .orders-filters input[type="date"] {
-  padding: 6px 10px; font-size: 12px;
+  padding: 5px 12px; font-size: 12px; height: 28px;
+  border-radius: 999px; background: var(--card);
 }
+.orders-filters select:hover,
+.orders-filters input[type="date"]:hover { border-color: var(--cyan2); }
 .of-group {
-  display: flex; align-items: center; gap: 6px;
-  padding: 4px 10px; background: var(--card); border: 1px solid var(--border);
-  border-radius: 8px;
+  display: flex; align-items: center; gap: 6px; height: 28px;
+  padding: 0 12px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 999px;
 }
+.of-group:hover { border-color: var(--cyan2); }
+.of-group input[type="date"] {
+  height: auto; padding: 0; border: 0; background: transparent;
+}
+.of-group input[type="date"]:focus { box-shadow: none; }
 .of-lbl {
   font-size: 11px; color: var(--muted); font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.5px;
 }
 .of-sep { color: var(--muted); font-size: 11px; }
+.orders-filters .btn-sm {
+  height: 28px; padding: 0 14px; border-radius: 999px;
+}
 .of-cols-wrap { position: relative; }
 .of-cols-panel {
   position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
@@ -1112,7 +1169,9 @@ nav.legacy-nav { display: none !important; }
   <!-- MANUAL GRANT -->
   <div class="page" id="page-grant">
     <div class="section">
-      <div class="section-title" style="margin-bottom:20px">Manual Grant Access</div>
+      <div class="section-header">
+        <div class="section-title">Manual Grant Access</div>
+      </div>
       <div id="alert-grant" class="alert"></div>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:480px">
         <div class="form-row">
@@ -1607,6 +1666,32 @@ function loadAll() {
   loadDashboard();
   loadProducts();
   loadSubscribers();
+}
+
+// Mobile More-sheet (Phase G4) — overflow menu for hidden bottom-nav
+// pages. Visible only at the mobile breakpoint where the sheet CSS lives.
+function toggleMoreSheet(ev) {
+  if (ev) ev.stopPropagation();
+  const sheet    = document.getElementById('more-sheet');
+  const backdrop = document.getElementById('more-sheet-backdrop');
+  const trigger  = document.getElementById('admin-bottom-nav-more');
+  if (!sheet || !backdrop) return;
+  const open = sheet.hidden;
+  sheet.hidden    = !open;
+  backdrop.hidden = !open;
+  if (trigger) trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function closeMoreSheet() {
+  const sheet    = document.getElementById('more-sheet');
+  const backdrop = document.getElementById('more-sheet-backdrop');
+  const trigger  = document.getElementById('admin-bottom-nav-more');
+  if (sheet)    sheet.hidden    = true;
+  if (backdrop) backdrop.hidden = true;
+  if (trigger)  trigger.setAttribute('aria-expanded', 'false');
+}
+function navigateMoreSheet(page) {
+  closeMoreSheet();
+  showPage(page);
 }
 
 // ── Dashboard topbar (Phase G3) ───────────────────────────────────
@@ -2340,11 +2425,34 @@ function renderOrdersPagination(page, totalPages, total) {
   const el = document.getElementById('orders-pagination');
   if (!el) return;
   if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  // First / last / current ± 2 with ellipsis. Mirrors the Subscribers
+  // pagination pattern (goSubPage) but for the server-paged Orders feed.
+  const window = 2;
+  const numbers = [];
+  const push = (v) => { if (numbers[numbers.length - 1] !== v) numbers.push(v); };
+  const pushGap = () => { if (numbers[numbers.length - 1] !== '…') numbers.push('…'); };
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= page - window && i <= page + window)) {
+      push(i);
+    } else if (i === 2 && page - window > 2) {
+      pushGap();
+    } else if (i === totalPages - 1 && page + window < totalPages - 1) {
+      pushGap();
+    }
+  }
+
+  const numBtns = numbers.map(n => {
+    if (n === '…') return '<span style="font-size:12px;color:var(--muted);padding:0 4px;">…</span>';
+    return `<button class="btn btn-sm ${n === page ? 'btn-primary' : 'btn-ghost'}" onclick="goOrderPage(${n})">${n}</button>`;
+  }).join('');
+
   el.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;">
       <span style="font-size:12px;color:var(--muted)">Page ${page} of ${totalPages} · ${total} order total</span>
-      <div style="display:flex;gap:4px;margin-left:auto;">
+      <div style="display:flex;gap:4px;margin-left:auto;align-items:center;">
         <button class="btn btn-ghost btn-sm" onclick="goOrderPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
+        ${numBtns}
         <button class="btn btn-ghost btn-sm" onclick="goOrderPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>Next ›</button>
       </div>
     </div>
@@ -3379,7 +3487,25 @@ async function saveAndRetry() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
     <span>Produk</span>
   </div>
+  <div class="admin-bottom-nav-item" id="admin-bottom-nav-more" onclick="toggleMoreSheet(event)" role="button" aria-haspopup="menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+    <span>More</span>
+  </div>
 </nav>
+
+<!-- Mobile More overflow sheet (Phase G4) -->
+<div class="more-sheet-backdrop" id="more-sheet-backdrop" hidden onclick="closeMoreSheet()"></div>
+<div class="more-sheet" id="more-sheet" hidden role="menu" aria-label="More navigation">
+  <div class="more-sheet-handle"></div>
+  <button type="button" class="more-sheet-item" data-page="grant" onclick="navigateMoreSheet('grant')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Manual Grant
+  </button>
+  <button type="button" class="more-sheet-item" data-page="promo" onclick="navigateMoreSheet('promo')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    Promo
+  </button>
+</div>
 
 </body>
 </html>
