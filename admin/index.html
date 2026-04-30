@@ -116,10 +116,10 @@ nav {
 .login-brand-mark svg { width: 100%; height: 100%; }
 .login-brand h2 {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px; letter-spacing: 2px; margin: 0;
-  color: var(--white);
+  font-size: 22px; letter-spacing: 2px;
+  margin: 0 0 4px; color: var(--white);
 }
-.login-brand p { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+.login-brand p { font-size: 13px; color: var(--muted); margin: 0; }
 /* legacy: keep older standalone h2/p selectors for any callers that still
    render the pre-F8 layout (no-op when login-brand is used) */
 .login-box > h2 {
@@ -573,7 +573,11 @@ nav.legacy-nav { display: none !important; }
 }
 .of-cols-wrap { position: relative; }
 .of-cols-panel {
-  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+  /* z-index: was 20 — sat below the sticky sidebar's auto stacking
+     context, so the dropdown rendered behind the sidebar on Orders.
+     Bumped to 50 so it lands above sidebar + cc-panel but still
+     clears the modal stack at z=1000. */
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 50;
   background: var(--card); border: 1px solid var(--border); border-radius: 8px;
   padding: 8px 10px; min-width: 180px; box-shadow: 0 8px 24px rgba(0,0,0,.35);
   display: flex; flex-direction: column; gap: 4px;
@@ -631,7 +635,12 @@ nav.legacy-nav { display: none !important; }
 
 /* ─── Dashboard hero + action tiles (Phase C2 PR2) ─────────── */
 .cc-hero {
-  background: var(--card); color: var(--white);
+  /* H4: darkened from var(--card) (#0D1B30) to var(--bg) (#080F1A) so
+     the hero reads as a deeper "command-center surface" beneath the
+     panels, matching TRXC-side's hero-darker-than-surface treatment.
+     Border kept (TRXC-side drops it; ETC's lighter card2 surrounding
+     makes a 1px tint useful for separation). */
+  background: var(--bg); color: var(--white);
   border-radius: 16px; padding: 28px; margin-bottom: 16px;
   position: relative; overflow: hidden;
   border: 1px solid var(--border);
@@ -672,10 +681,17 @@ nav.legacy-nav { display: none !important; }
   border-radius: 999px; background: #B91C1C; color: #fff;
   font-size: 12px; font-weight: 600;
 }
-@media (max-width: 900px) {
+/* H4: breakpoints aligned to TRXC-side — was 900px (kept 3-col tiles
+   too long on tablet); 1100px collapses tiles + hero earlier. 700px
+   tightens hero padding on phones. */
+@media (max-width: 1100px) {
   .cc-hero-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
-  .cc-hero-val  { font-size: 36px; }
+  .cc-hero-val  { font-size: 40px; }
   .cc-hero-mini { font-size: 22px; }
+}
+@media (max-width: 700px) {
+  .cc-hero { padding: 20px; }
+  .cc-hero-val { font-size: 36px; }
 }
 
 .cc-actions {
@@ -716,7 +732,7 @@ nav.legacy-nav { display: none !important; }
 .cc-act-cta-red     { color: #FCA5A5; }
 .cc-act-cta-amber   { color: #FCD34D; }
 .cc-act-cta-emerald { color: #6EE7B7; }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .cc-actions { grid-template-columns: 1fr; }
 }
 
@@ -1081,9 +1097,9 @@ nav.legacy-nav { display: none !important; }
             <div class="cc-panel-sub" id="cc-mix-sub">Last 30 days</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:18px;min-height:160px;">
-          <div style="position:relative;width:160px;height:160px;flex-shrink:0;">
-            <canvas id="admin-chart-donut" width="280" height="280" role="img" aria-label="Sold Products"></canvas>
+        <div style="display:flex;align-items:center;gap:18px;min-height:140px;">
+          <div style="position:relative;width:120px;height:120px;flex-shrink:0;">
+            <canvas id="admin-chart-donut" width="240" height="240" role="img" aria-label="Sold Products"></canvas>
           </div>
           <div id="cc-mix-list" class="cc-mix-list" style="flex:1;"><div style="color:var(--muted);font-size:12px;">Loading...</div></div>
         </div>
