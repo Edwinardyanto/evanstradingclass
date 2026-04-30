@@ -434,6 +434,25 @@ nav.legacy-nav { display: none !important; }
   text-transform: uppercase; letter-spacing: 0.5px;
 }
 .of-sep { color: var(--muted); font-size: 11px; }
+.of-cols-wrap { position: relative; }
+.of-cols-panel {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; min-width: 180px; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.of-cols-panel[hidden] { display: none; }
+.of-cols-panel label {
+  display: flex; align-items: center; gap: 8px; font-size: 12px;
+  cursor: pointer; padding: 4px 2px;
+}
+.of-cols-panel input[type="checkbox"] { accent-color: var(--cyan); }
+.sort-btn {
+  background: none; border: 0; padding: 0; color: inherit; font: inherit;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+}
+.sort-btn:hover { color: var(--cyan); }
+.sort-arrow { font-size: 10px; opacity: 0.6; }
 
 /* ─── Dashboard hero + action tiles (Phase C2 PR2) ─────────── */
 .cc-hero {
@@ -683,10 +702,6 @@ nav.legacy-nav { display: none !important; }
     <div class="sidebar-item" data-page="orders" onclick="showPage('orders')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3z"/><path d="M5 7v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7"/><path d="M10 11h4"/></svg>
       Order
-    </div>
-    <div class="sidebar-item" data-page="transactions" onclick="showPage('transactions')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 21 7 17 3"/><line x1="21" y1="7" x2="9" y2="7"/><polyline points="7 21 3 17 7 13"/><line x1="15" y1="17" x2="3" y2="17"/></svg>
-      Transaksi
     </div>
     <div class="sidebar-item" data-page="affiliates" onclick="showPage('affiliates')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -951,13 +966,15 @@ nav.legacy-nav { display: none !important; }
         <button class="btn btn-ghost btn-sm" onclick="loadSubscribers()">↻ Refresh</button>
       </div>
       <div style="margin-bottom:12px">
-        <input type="text" id="sub-search" placeholder="Cari TV username..." style="width:300px" oninput="filterSubscribers()"/>
+        <input type="text" id="sub-search" placeholder="Cari TV username / email / no. HP..." style="width:300px" oninput="filterSubscribers()"/>
       </div>
+      <div id="subscribers-summary" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
       <div class="table-wrap">
         <table>
           <thead><tr>
             <th>TV Username</th>
             <th class="hide-mobile">Email</th>
+            <th class="hide-mobile">No. HP</th>
             <th class="hide-mobile">Latest Product</th>
             <th class="hide-mobile">Expires</th>
             <th class="hide-mobile">Total Transaksi</th>
@@ -965,36 +982,10 @@ nav.legacy-nav { display: none !important; }
             <th>TV</th>
             <th>Aksi</th>
           </tr></thead>
-          <tbody id="subscribers-table"><tr><td colspan="8" class="empty">Loading...</td></tr></tbody>
+          <tbody id="subscribers-table"><tr><td colspan="9" class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
       <div id="subscribers-pagination"></div>
-    </div>
-  </div>
-
-  <!-- TRANSACTIONS -->
-  <div class="page" id="page-transactions">
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Semua Transaksi</div>
-        <button class="btn btn-ghost btn-sm" onclick="loadTransactions()">↻ Refresh</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th class="hide-mobile">Order ID</th>
-            <th>TV Username</th>
-            <th class="hide-mobile">Produk</th>
-            <th>Amount</th>
-            <th class="hide-mobile">Payment</th>
-            <th class="hide-mobile">Expires</th>
-            <th>Status</th>
-            <th>Aksi</th>
-          </tr></thead>
-          <tbody id="transactions-table"><tr><td colspan="8" class="empty">Loading...</td></tr></tbody>
-        </table>
-      </div>
-      <div id="transactions-pagination"></div>
     </div>
   </div>
 
@@ -1037,6 +1028,10 @@ nav.legacy-nav { display: none !important; }
           <input type="date" id="orders-f-completed-to" onchange="applyOrderFilter('completed_to', this.value)">
         </div>
         <button class="btn btn-ghost btn-sm" onclick="resetOrderFilters()">Reset</button>
+        <div class="of-cols-wrap">
+          <button class="btn btn-ghost btn-sm" onclick="toggleOrdersColumnPicker(event)" id="orders-cols-btn">⋯ Columns</button>
+          <div class="of-cols-panel" id="orders-cols-panel" hidden></div>
+        </div>
       </div>
 
       <!-- SUMMARY -->
@@ -1044,19 +1039,9 @@ nav.legacy-nav { display: none !important; }
 
       <!-- TABLE -->
       <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th class="hide-mobile">Order ID</th>
-            <th>Customer</th>
-            <th class="hide-mobile">Produk</th>
-            <th>Amount</th>
-            <th>Payment</th>
-            <th class="hide-mobile">Metode</th>
-            <th class="hide-mobile">Ref</th>
-            <th class="hide-mobile">Created</th>
-            <th>Aksi</th>
-          </tr></thead>
-          <tbody id="orders-table"><tr><td colspan="9" class="empty">Loading...</td></tr></tbody>
+        <table id="orders-table-el">
+          <thead><tr id="orders-table-head"></tr></thead>
+          <tbody id="orders-table"><tr><td class="empty">Loading...</td></tr></tbody>
         </table>
       </div>
       <div id="orders-pagination"></div>
@@ -1472,9 +1457,6 @@ let SECRET = '';
 let allSubscribers = [];
 let subscriberPage = 1;
 const SUBSCRIBER_PAGE_SIZE = 100;
-let allTransactions = [];
-let transactionPage = 1;
-const TRANSACTION_PAGE_SIZE = 100;
 let currentEditOrderId = null;
 
 // ── Auth ──────────────────────────────────────────────────────────
@@ -1556,7 +1538,6 @@ function showPage(name) {
   // Per-tab data fetch hooks
   if (name === 'products')     loadProducts();
   if (name === 'subscribers')  loadSubscribers();
-  if (name === 'transactions') loadTransactions();
   if (name === 'orders')       { populateOrderProductFilter(); loadAdminOrders(); }
   if (name === 'affiliates')   { loadAffiliates(); loadAdminTraffic(); }
   if (name === 'promo')        loadPromos();
@@ -1566,7 +1547,6 @@ function loadAll() {
   loadDashboard();
   loadProducts();
   loadSubscribers();
-  loadTransactions();
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────
@@ -1725,7 +1705,8 @@ function filterSubscribers() {
   const q = document.getElementById('sub-search').value.toLowerCase();
   renderSubscribers(allSubscribers.filter(s =>
     s.tv_username.toLowerCase().includes(q) ||
-    (s.email || '').toLowerCase().includes(q)
+    (s.email || '').toLowerCase().includes(q) ||
+    (s.phone || '').toLowerCase().includes(q)
   ));
 }
 
@@ -1737,21 +1718,32 @@ function renderSubscribers(list) {
   const end = start + SUBSCRIBER_PAGE_SIZE;
   const paginated = list.slice(start, end);
 
+  const summaryEl = document.getElementById('subscribers-summary');
+  if (summaryEl) {
+    const activeCount = list.filter(s => s.is_active && (s.is_lifetime || !s.expires_at || new Date(s.expires_at) >= now)).length;
+    const paidAmt = list.reduce((sum, s) => sum + Number(s.total_transaction || 0), 0);
+    summaryEl.textContent = `${total} subscriber · ${activeCount} active · Rp ${paidAmt.toLocaleString('id-ID')} total LTV`;
+  }
+
   document.getElementById('subscribers-table').innerHTML = paginated.length
     ? paginated.map(s => {
         const expired = !s.is_lifetime && s.expires_at && new Date(s.expires_at) < now;
+        const expiresCell = s.is_lifetime
+          ? '<span style="color:var(--gold);font-size:16px;font-weight:700;" title="Lifetime">∞</span>'
+          : (s.expires_at ? fmtDate(s.expires_at) : '—');
         return `<tr>
           <td><strong>${s.tv_username}</strong></td>
           <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${s.email || '—'}</td>
+          <td class="hide-mobile mono" style="font-size:12px;color:var(--muted)">${s.phone || '—'}</td>
           <td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.latest_product || '—'}</td>
-          <td class="mono hide-mobile" style="font-size:12px">${s.is_lifetime ? '<span style="color:var(--gold)">Lifetime</span>' : (s.expires_at ? fmtDate(s.expires_at) : '—')}</td>
-          <td class="mono hide-mobile">Rp ${parseInt(s.total_transaction||0).toLocaleString('id-ID')}</td>
+          <td class="mono hide-mobile" style="font-size:12px">${expiresCell}</td>
+          <td class="mono hide-mobile">Rp ${Number(s.total_transaction||0).toLocaleString('id-ID')}</td>
           <td>${expired ? '<span class="badge badge-red">Expired</span>' : s.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-muted">Inactive</span>'}</td>
           <td>${s.tv_status === 'granted' ? '<span class="badge badge-green">GRANTED</span>' : s.tv_status === 'failed' ? '<span class="badge badge-red">FAILED</span>' : '—'}</td>
           <td><button class="btn btn-ghost btn-sm" onclick="viewSubscriber('${s.tv_username}')">Detail</button></td>
         </tr>`;
       }).join('')
-    : '<tr><td colspan="8" class="empty">Belum ada subscriber</td></tr>';
+    : '<tr><td colspan="9" class="empty">Belum ada subscriber</td></tr>';
 
   const paginationEl = document.getElementById('subscribers-pagination');
   if (paginationEl) {
@@ -1782,7 +1774,10 @@ function goSubPage(p) {
   subscriberPage = p;
   const q = document.getElementById('sub-search').value.toLowerCase();
   const filtered = q
-    ? allSubscribers.filter(s => s.tv_username.toLowerCase().includes(q) || (s.email||'').toLowerCase().includes(q))
+    ? allSubscribers.filter(s =>
+        s.tv_username.toLowerCase().includes(q) ||
+        (s.email||'').toLowerCase().includes(q) ||
+        (s.phone||'').toLowerCase().includes(q))
     : allSubscribers;
   renderSubscribers(filtered);
 }
@@ -1795,77 +1790,13 @@ async function viewSubscriber(username) {
   } catch(e) { alert(e.message); }
 }
 
-// ── Transactions ──────────────────────────────────────────────────
-async function loadTransactions() {
-  try {
-    const { transactions } = await api('GET', '/admin/transactions');
-    allTransactions = transactions;
-    transactionPage = 1;
-    renderTransactions();
-  } catch(e) { console.error(e); }
-}
-
-function renderTransactions() {
-  const total = allTransactions.length;
-  const totalPages = Math.ceil(total / TRANSACTION_PAGE_SIZE);
-  const start = (transactionPage - 1) * TRANSACTION_PAGE_SIZE;
-  const end = start + TRANSACTION_PAGE_SIZE;
-  const paginated = allTransactions.slice(start, end);
-
-  document.getElementById('transactions-table').innerHTML = paginated.length
-    ? paginated.map(t => `<tr>
-        <td class="mono hide-mobile" style="font-size:11px">${t.scalev_order_id}</td>
-        <td><strong>${t.tv_username}</strong></td>
-        <td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:200px">${t.product_name || '—'}</td>
-        <td class="mono">Rp ${parseInt(t.amount||0).toLocaleString('id-ID')}</td>
-        <td class="hide-mobile">${t.payment_status === 'paid' ? '<span class="badge badge-green">PAID</span>' : '—'}</td>
-        <td class="mono hide-mobile" style="font-size:12px">${t.is_lifetime ? '<span style="color:var(--gold)">Lifetime</span>' : (t.expires_at ? fmtDate(t.expires_at) : '—')}</td>
-        <td>${statusBadge(t.tv_access_status)}</td>
-        <td>${['failed','failed_no_username','failed_unknown_product','processing'].includes(t.tv_access_status)
-          ? `<div style="display:flex;gap:4px;">
-              <button class="btn btn-ghost btn-sm" onclick="retry('${t.scalev_order_id}')">↻</button>
-              <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${t.scalev_order_id}', '${t.tv_username}')" style="color:var(--cyan)">✎</button>
-             </div>`
-          : ''}</td>
-      </tr>`).join('')
-    : '<tr><td colspan="8" class="empty">Belum ada transaksi</td></tr>';
-
-  const paginationEl = document.getElementById('transactions-pagination');
-  if (paginationEl) {
-    if (totalPages <= 1) {
-      paginationEl.innerHTML = '';
-    } else {
-      let html = `<div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;">`;
-      html += `<span style="font-size:12px;color:var(--muted);">Menampilkan ${start+1}–${Math.min(end,total)} dari ${total}</span>`;
-      html += `<div style="display:flex;gap:4px;margin-left:auto;">`;
-      html += `<button class="btn btn-ghost btn-sm" onclick="goTxPage(${transactionPage-1})" ${transactionPage===1?'disabled':''}>‹ Prev</button>`;
-      const maxBtn = 5;
-      let startPage = Math.max(1, transactionPage - 2);
-      let endPage = Math.min(totalPages, startPage + maxBtn - 1);
-      if (endPage - startPage < maxBtn - 1) startPage = Math.max(1, endPage - maxBtn + 1);
-      for (let i = startPage; i <= endPage; i++) {
-        html += `<button class="btn btn-sm ${i===transactionPage?'btn-primary':'btn-ghost'}" onclick="goTxPage(${i})">${i}</button>`;
-      }
-      html += `<button class="btn btn-ghost btn-sm" onclick="goTxPage(${transactionPage+1})" ${transactionPage===totalPages?'disabled':''}>Next ›</button>`;
-      html += `</div></div>`;
-      paginationEl.innerHTML = html;
-    }
-  }
-}
-
-function goTxPage(p) {
-  const totalPages = Math.ceil(allTransactions.length / TRANSACTION_PAGE_SIZE);
-  if (p < 1 || p > totalPages) return;
-  transactionPage = p;
-  renderTransactions();
-}
-
+// ── Retry handler (shared with Orders + Dashboard failed table) ──
 async function retry(orderId) {
   try {
     await api('POST', `/admin/transactions/${orderId}/retry`);
     alert('✅ Retry berhasil!');
     loadDashboard();
-    loadTransactions();
+    if (typeof loadAdminOrders === 'function') loadAdminOrders();
   } catch(e) { alert('❌ ' + e.message); }
 }
 
@@ -2040,8 +1971,9 @@ async function loadAdminSoldProductsDonut() {
   } catch (e) { console.error('loadAdminSoldProductsDonut error:', e); }
 }
 
-// ── Orders tab (Phase C2 PR3) ────────────────────────────────────
-// Server-side filtered + paginated orders feed. State lives in this
+// ── Orders tab (Phase C2 PR3, extended in G1) ───────────────────
+// Server-side filtered + paginated orders feed with column picker
+// (localStorage persist) + Created-at sort. State lives in this
 // module; filter changes always reset page to 1.
 const _orderFilters = {
   payment_status: '',
@@ -2055,6 +1987,137 @@ const _orderFilters = {
   page:  1,
   limit: 50,
 };
+
+// Column registry. `optional: false` cols are always shown; `optional:
+// true` cols are toggleable via the column picker. Render order = array
+// order; non-optional cols can't be toggled off.
+const ORDERS_COLS = [
+  { key: 'order_id',  label: 'Order ID', optional: false, mobileHide: true,  cell: o => `<td class="mono hide-mobile" style="font-size:11px">${o.scalev_order_id}</td>` },
+  { key: 'customer',  label: 'Customer', optional: false, mobileHide: false, cell: o => {
+      const line = o.customer_name || o.tv_username || '—';
+      const sub  = o.customer_email || '—';
+      return `<td><strong>${line}</strong><div style="font-size:11px;color:var(--muted)">${sub}</div></td>`;
+    } },
+  { key: 'phone',     label: 'No. HP',   optional: true,  mobileHide: true,  defaultOn: true, cell: o => `<td class="hide-mobile mono" style="font-size:12px;color:var(--muted)">${o.customer_phone || '—'}</td>` },
+  { key: 'product',   label: 'Produk',   optional: false, mobileHide: true,  cell: o => `<td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.product_name || '—'}</td>` },
+  { key: 'amount',    label: 'Amount',   optional: false, mobileHide: false, cell: o => `<td class="mono">Rp ${Number(o.amount || 0).toLocaleString('id-ID')}</td>` },
+  { key: 'payment',   label: 'Payment',  optional: false, mobileHide: false, cell: o => {
+      const s = o.payment_status;
+      if (s === 'paid')   return '<td><span class="badge badge-green">PAID</span></td>';
+      if (s === 'unpaid' || s === null || s === undefined)
+                          return '<td><span class="badge badge-muted">unpaid</span></td>';
+      return `<td><span class="badge badge-muted">${s}</span></td>`;
+    } },
+  { key: 'method',    label: 'Metode',   optional: true,  mobileHide: true,  defaultOn: true, cell: o => `<td class="hide-mobile" style="font-size:12px">${o.payment_method || '—'}</td>` },
+  { key: 'ref',       label: 'Ref',      optional: true,  mobileHide: true,  defaultOn: true, cell: o => o.ref_code
+      ? `<td class="hide-mobile"><span class="badge badge-cyan">${o.ref_code}</span></td>`
+      : '<td class="hide-mobile"><span style="color:var(--muted)">—</span></td>' },
+  { key: 'created',   label: 'Created',  optional: true,  mobileHide: true,  defaultOn: true, sortable: true, cell: o => `<td class="hide-mobile" style="font-size:12px;color:var(--muted)">${fmtDate(o.created_at)}</td>` },
+  { key: 'expires',   label: 'Expires',  optional: true,  mobileHide: true,  defaultOn: false, cell: o => {
+      if (o.is_lifetime) return '<td class="hide-mobile" style="font-size:14px;font-weight:700;color:var(--gold)">∞</td>';
+      return `<td class="hide-mobile" style="font-size:12px;color:var(--muted)">${o.expires_at ? fmtDate(o.expires_at) : '—'}</td>`;
+    } },
+  { key: 'paid_at',   label: 'Paid At',  optional: true,  mobileHide: true,  defaultOn: false, cell: o => `<td class="hide-mobile" style="font-size:12px;color:var(--muted)">${o.completed_at ? fmtDate(o.completed_at) : '—'}</td>` },
+  { key: 'promo',     label: 'Promo',    optional: true,  mobileHide: true,  defaultOn: false, cell: o => o.promo_code
+      ? `<td class="hide-mobile"><span class="badge badge-muted">${o.promo_code}</span></td>`
+      : '<td class="hide-mobile"><span style="color:var(--muted)">—</span></td>' },
+  { key: 'actions',   label: 'Aksi',     optional: false, mobileHide: false, cell: o => {
+      const failed = ['failed','failed_no_username','failed_unknown_product','processing'].includes(o.tv_access_status);
+      if (!failed) return '<td></td>';
+      return `<td><div style="display:flex;gap:4px;">
+        <button class="btn btn-ghost btn-sm" onclick="retry('${o.scalev_order_id}')" title="Retry">↻</button>
+        <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${o.scalev_order_id}', '${o.tv_username || ''}')" style="color:var(--cyan)" title="Edit username">✎</button>
+      </div></td>`;
+    } },
+];
+
+function _ordersDefaultActiveCols() {
+  return new Set(ORDERS_COLS.filter(c => !c.optional || c.defaultOn).map(c => c.key));
+}
+function getOrdersActiveCols() {
+  try {
+    const raw = localStorage.getItem('admin-orders-cols');
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) {
+        const valid = new Set(ORDERS_COLS.map(c => c.key));
+        const out = new Set(arr.filter(k => valid.has(k)));
+        ORDERS_COLS.forEach(c => { if (!c.optional) out.add(c.key); });
+        return out;
+      }
+    }
+  } catch (_) {}
+  return _ordersDefaultActiveCols();
+}
+function setOrdersActiveCols(set) {
+  localStorage.setItem('admin-orders-cols', JSON.stringify([...set]));
+}
+
+let _orderSort = { dir: 'desc' }; // sort key fixed to created_at; only direction toggles
+
+function toggleOrdersColumnPicker(ev) {
+  if (ev) ev.stopPropagation();
+  const panel = document.getElementById('orders-cols-panel');
+  if (!panel) return;
+  if (panel.hidden) {
+    renderOrdersColumnPicker();
+    panel.hidden = false;
+    setTimeout(() => document.addEventListener('click', _ordersPickerOutsideHandler), 0);
+  } else {
+    panel.hidden = true;
+    document.removeEventListener('click', _ordersPickerOutsideHandler);
+  }
+}
+function _ordersPickerOutsideHandler(e) {
+  const panel = document.getElementById('orders-cols-panel');
+  const btn   = document.getElementById('orders-cols-btn');
+  if (!panel || panel.hidden) return;
+  if (panel.contains(e.target) || (btn && btn.contains(e.target))) return;
+  panel.hidden = true;
+  document.removeEventListener('click', _ordersPickerOutsideHandler);
+}
+function renderOrdersColumnPicker() {
+  const panel = document.getElementById('orders-cols-panel');
+  if (!panel) return;
+  const active = getOrdersActiveCols();
+  panel.innerHTML = ORDERS_COLS.filter(c => c.optional).map(c => `
+    <label>
+      <input type="checkbox" data-col="${c.key}" ${active.has(c.key) ? 'checked' : ''}
+             onchange="onOrdersColToggle('${c.key}', this.checked)">
+      ${c.label}
+    </label>
+  `).join('');
+}
+function onOrdersColToggle(key, on) {
+  const active = getOrdersActiveCols();
+  if (on) active.add(key); else active.delete(key);
+  setOrdersActiveCols(active);
+  renderOrdersTableHead();
+  // Re-render with last data so visible cols update without a server hit.
+  if (_lastOrders) renderOrdersTableBody(_lastOrders);
+}
+
+function renderOrdersTableHead() {
+  const head = document.getElementById('orders-table-head');
+  if (!head) return;
+  const active = getOrdersActiveCols();
+  head.innerHTML = ORDERS_COLS.filter(c => active.has(c.key)).map(c => {
+    const cls = c.mobileHide ? ' class="hide-mobile"' : '';
+    if (c.sortable && c.key === 'created') {
+      const arrow = _orderSort.dir === 'asc' ? '↑' : '↓';
+      return `<th${cls}><button class="sort-btn" onclick="toggleOrderCreatedSort()">${c.label} <span class="sort-arrow">${arrow}</span></button></th>`;
+    }
+    return `<th${cls}>${c.label}</th>`;
+  }).join('');
+}
+
+function toggleOrderCreatedSort() {
+  _orderSort.dir = _orderSort.dir === 'asc' ? 'desc' : 'asc';
+  renderOrdersTableHead();
+  if (_lastOrders) renderOrdersTableBody(_lastOrders);
+}
+
+let _lastOrders = null;
 
 async function populateOrderProductFilter() {
   try {
@@ -2070,7 +2133,9 @@ async function populateOrderProductFilter() {
 async function loadAdminOrders() {
   const tbody = document.getElementById('orders-table');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading...</td></tr>';
+  renderOrdersTableHead();
+  const cs = getOrdersActiveCols().size;
+  tbody.innerHTML = `<tr><td colspan="${cs}" class="empty">Loading...</td></tr>`;
 
   const params = new URLSearchParams();
   Object.entries(_orderFilters).forEach(([k, v]) => {
@@ -2082,7 +2147,7 @@ async function loadAdminOrders() {
     renderOrdersTable(data.orders || [], data.payment_methods || [], Number(data.total || 0));
     renderOrdersPagination(Number(data.page || 1), Number(data.total_pages || 1), Number(data.total || 0));
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="9" class="empty">Error: ${e.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${cs}" class="empty">Error: ${e.message}</td></tr>`;
   }
 }
 
@@ -2098,46 +2163,33 @@ function renderOrdersTable(orders, paymentMethods, total) {
   const summaryEl = document.getElementById('orders-summary');
   if (summaryEl) {
     const paidCount = orders.filter(o => o.payment_status === 'paid').length;
-    summaryEl.textContent = `${total} order ditemukan · ${paidCount} paid (page ini)`;
+    const paidAmt   = orders
+      .filter(o => o.payment_status === 'paid')
+      .reduce((s, o) => s + Number(o.amount || 0), 0);
+    summaryEl.textContent = `${total} order ditemukan · ${paidCount} paid (page ini) · Rp ${paidAmt.toLocaleString('id-ID')}`;
   }
 
+  _lastOrders = orders;
+  renderOrdersTableBody(orders);
+}
+
+function renderOrdersTableBody(orders) {
   const tbody = document.getElementById('orders-table');
+  if (!tbody) return;
+  const active = getOrdersActiveCols();
+  const cols   = ORDERS_COLS.filter(c => active.has(c.key));
   if (!orders.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">Belum ada order untuk filter ini</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty">Belum ada order untuk filter ini</td></tr>`;
     return;
   }
-
-  tbody.innerHTML = orders.map(o => {
-    const failed = ['failed','failed_no_username','failed_unknown_product','processing'].includes(o.tv_access_status);
-    const actions = failed
-      ? `<div style="display:flex;gap:4px;">
-          <button class="btn btn-ghost btn-sm" onclick="retry('${o.scalev_order_id}')" title="Retry">↻</button>
-          <button class="btn btn-ghost btn-sm" onclick="openEditUsernameModal('${o.scalev_order_id}', '${o.tv_username || ''}')" style="color:var(--cyan)" title="Edit username">✎</button>
-         </div>`
-      : '';
-    const paymentBadge = o.payment_status === 'paid'
-      ? '<span class="badge badge-green">PAID</span>'
-      : (o.payment_status === 'unpaid' || o.payment_status === null || o.payment_status === undefined)
-        ? '<span class="badge badge-muted">unpaid</span>'
-        : `<span class="badge badge-muted">${o.payment_status}</span>`;
-    const refBadge = o.ref_code
-      ? `<span class="badge badge-cyan">${o.ref_code}</span>`
-      : '<span style="color:var(--muted)">—</span>';
-    const customerLine = o.customer_name || o.tv_username || '—';
-    const customerSub  = o.customer_email || '—';
-    return `<tr>
-      <td class="mono hide-mobile" style="font-size:11px">${o.scalev_order_id}</td>
-      <td><strong>${customerLine}</strong>
-          <div style="font-size:11px;color:var(--muted)">${customerSub}</div></td>
-      <td class="hide-mobile" style="font-size:12px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.product_name || '—'}</td>
-      <td class="mono">Rp ${Number(o.amount || 0).toLocaleString('id-ID')}</td>
-      <td>${paymentBadge}</td>
-      <td class="hide-mobile" style="font-size:12px">${o.payment_method || '—'}</td>
-      <td class="hide-mobile">${refBadge}</td>
-      <td class="hide-mobile" style="font-size:12px;color:var(--muted)">${fmtDate(o.created_at)}</td>
-      <td>${actions}</td>
-    </tr>`;
-  }).join('');
+  // Client-side sort on the current page when direction != server default.
+  // Server returns DESC by created_at, so flip the array for ASC.
+  const view = _orderSort.dir === 'asc'
+    ? [...orders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    : orders;
+  tbody.innerHTML = view.map(o =>
+    `<tr>${cols.map(c => c.cell(o)).join('')}</tr>`
+  ).join('');
 }
 
 function renderOrdersPagination(page, totalPages, total) {
@@ -3087,7 +3139,7 @@ async function saveAndRetry() {
     closeEditUsernameModal();
     showAlert('grant', `✅ Grant berhasil untuk ${username}`, 'success');
     loadDashboard();
-    loadTransactions();
+    if (typeof loadAdminOrders === 'function') loadAdminOrders();
   } catch(e) {
     const el = document.getElementById('edit-username-error');
     el.textContent = e.message;
