@@ -231,20 +231,28 @@ select option { background: var(--card); color: var(--ink); }
 /* MODAL */
 .modal-overlay {
   display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.55); z-index: 1000;
+  /* Slightly lifted from dead-black so the blur reads as a tinted
+     frosted layer instead of an opaque scrim. */
+  background: rgba(15,20,25,.55); z-index: 1000;
   align-items: center; justify-content: center;
+  padding: 16px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 .modal-overlay.open { display: flex; }
 .modal {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 32px; width: 480px;
-  max-width: 90vw;
+  border-radius: 16px; padding: 28px; width: 480px;
+  max-width: 100%; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
 }
 .modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; margin-bottom: 4px; }
-.modal p  { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
-.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+.modal p  { font-size: 12px; color: var(--muted); margin-bottom: 22px; }
+.modal-footer {
+  display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 22px; padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
 
 /* ALERT */
 .alert {
@@ -299,13 +307,13 @@ input:checked + .toggle-slider:before { transform: translateX(14px); }
   grid-template-columns: 232px 1fr;
 }
 
-/* ─── F2: SIDEBAR ───────────────────────────────────────────── */
+/* ─── F2: SIDEBAR (H3: --sidebar-* tokens wired) ─────────────── */
 .sidebar {
-  background: var(--bg2); color: var(--white);
+  background: var(--sidebar-bg); color: var(--sidebar-ink);
   padding: 18px 14px 14px;
   display: flex; flex-direction: column; gap: 2px;
   min-height: 100vh; position: sticky; top: 0; align-self: flex-start;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid rgba(255,255,255,.06);
 }
 .sidebar-brand {
   display: flex; align-items: center; gap: 12px;
@@ -315,18 +323,18 @@ input:checked + .toggle-slider:before { transform: translateX(14px); }
   width: 36px; height: 36px; border-radius: 9px;
   background: var(--card); display: grid; place-items: center;
   overflow: hidden; flex-shrink: 0;
-  box-shadow: 0 0 0 1px var(--border);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.06);
   color: var(--cyan);
 }
 .sidebar-brand-mark svg { width: 100%; height: 100%; }
 .sidebar-brand-text {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 14px; letter-spacing: 1.5px; color: var(--white);
+  font-size: 14px; letter-spacing: 1.5px; color: var(--sidebar-ink);
 }
-.sidebar-brand-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.sidebar-brand-sub { font-size: 11px; color: var(--sidebar-muted); margin-top: 1px; }
 
 .sidebar-section {
-  font-size: 10px; color: var(--muted);
+  font-size: 10px; color: var(--sidebar-muted);
   text-transform: uppercase; letter-spacing: .1em;
   padding: 14px 10px 6px; font-weight: 600;
   font-family: 'JetBrains Mono', monospace;
@@ -334,13 +342,21 @@ input:checked + .toggle-slider:before { transform: translateX(14px); }
 .sidebar-item {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 10px; border-radius: 6px;
-  font-size: 13px; color: var(--muted); font-weight: 500;
+  font-size: 13px; color: var(--sidebar-muted); font-weight: 500;
   cursor: pointer; user-select: none;
   transition: background .15s, color .15s;
 }
-.sidebar-item:hover { background: var(--card); color: var(--white); }
-.sidebar-item.active { background: var(--cyan); color: #04120A; font-weight: 600; }
+.sidebar-item:hover { background: var(--sidebar-hover); color: var(--sidebar-ink); }
+.sidebar-item.active { background: var(--accent); color: #04120A; font-weight: 600; }
 .sidebar-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+/* Badge slot (e.g. unread count) — no consumer in HTML yet, but
+   defined for parity so a future <span class="sidebar-badge">3</span>
+   inside .sidebar-item will render styled. */
+.sidebar-badge {
+  margin-left: auto; padding: 1px 7px; border-radius: 999px;
+  font: 600 10px 'JetBrains Mono', monospace;
+  background: var(--accent-soft); color: var(--accent);
+}
 
 .sidebar-foot {
   margin-top: auto; padding-top: 14px;
@@ -349,29 +365,49 @@ input:checked + .toggle-slider:before { transform: translateX(14px); }
 }
 .sidebar-user {
   display: flex; align-items: center; gap: 10px;
-  padding: 6px 4px; font-size: 12px; color: var(--muted);
+  padding: 6px 4px; font-size: 12px; color: var(--sidebar-muted);
 }
 .sidebar-user-avatar {
   width: 28px; height: 28px; border-radius: 50%;
-  background: var(--cyan); color: #04120A;
+  background: var(--accent); color: #04120A;
   display: grid; place-items: center; font-weight: 700; font-size: 12px;
   flex-shrink: 0;
 }
-.sidebar-user-status { color: var(--white); font-weight: 500; font-size: 12px; }
+.sidebar-user-status { color: var(--sidebar-ink); font-weight: 500; font-size: 12px; }
 .sidebar-user-meta {
-  font-size: 10px; color: var(--muted);
+  font-size: 10px; color: var(--sidebar-muted);
   font-family: 'JetBrains Mono', monospace;
 }
 .sidebar-user-btn {
-  background: transparent; border: none; color: var(--muted);
+  background: transparent; border: none; color: var(--sidebar-muted);
   cursor: pointer; padding: 6px; border-radius: 5px;
   display: grid; place-items: center;
 }
-.sidebar-user-btn:hover { background: var(--card); color: var(--white); }
+.sidebar-user-btn:hover { background: var(--sidebar-hover); color: var(--sidebar-ink); }
 
 /* ─── F2: MAIN PANEL ────────────────────────────────────────── */
 .main { padding: 22px 28px 60px; min-width: 0; overflow-x: hidden; }
 .main .page { padding: 0; max-width: none; margin: 0; }
+
+/* ─── H3: legacy .topbar fallback (parity scaffolding) ─────────
+   No HTML consumer in either product today. Defined so a future
+   <div class="topbar"> on a non-dashboard page will style without
+   needing the full cc-topbar block (which is dashboard-scoped). */
+.topbar {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 22px; flex-wrap: wrap;
+}
+.topbar-title {
+  font-size: 22px; font-weight: 700;
+  letter-spacing: -.02em; color: var(--ink);
+}
+.topbar-sub {
+  font-size: 12px; color: var(--muted); margin-top: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.topbar-actions {
+  margin-left: auto; display: flex; align-items: center; gap: 8px;
+}
 
 /* hide the legacy top nav element entirely (replaced by sidebar) */
 nav.legacy-nav { display: none !important; }
@@ -688,6 +724,7 @@ nav.legacy-nav { display: none !important; }
 .cc-panel {
   background: var(--card); border: 1px solid var(--border);
   border-radius: 12px; padding: 18px; margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
 }
 
 /* ─── F3 Command Center grid system + ancillary panels ─────── */
@@ -771,15 +808,39 @@ nav.legacy-nav { display: none !important; }
   font-size: 11px; padding: 5px 11px; border-radius: 6px;
   border: 1px solid var(--border); background: transparent;
   color: var(--muted); cursor: pointer; transition: all .15s;
+  font-family: 'JetBrains Mono', monospace;
 }
-.period-btn:hover { color: var(--white); }
-.period-btn.active { background: var(--cyan); color: #0C0A1A; border-color: var(--cyan); }
+.period-btn:hover { border-color: var(--border2); color: var(--ink); }
+.period-btn.active { background: var(--accent); color: #04120A; border-color: var(--accent); }
 .cc-legend {
   display: flex; gap: 16px; margin-top: 10px;
   font-size: 12px; color: var(--muted); flex-wrap: wrap;
 }
 .cc-legend > div { display: flex; align-items: center; gap: 6px; }
 .cc-sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+/* H3: SSE live indicator chip — port from reference. No HTML
+   consumer in ETC yet (G3 reserved); chip + pulse animation defined
+   so a future <span class="cc-live"> renders styled out of the box. */
+.cc-live {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 6px;
+  font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  color: var(--muted); background: var(--card2);
+  border: 1px solid var(--border);
+}
+.cc-live::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--muted);
+}
+.cc-live.connected { color: var(--green); }
+.cc-live.connected::before {
+  background: var(--green);
+  animation: cc-live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes cc-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .55; transform: scale(1.35); }
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
         crossorigin="anonymous"></script>
