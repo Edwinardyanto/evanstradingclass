@@ -2732,37 +2732,19 @@ async function loadAdminFunnelChart() {
 // {summary, daily, by_product}) instead of TRXC-side /admin/stats/daily.
 // Field renames: data.daily (was income[]); per-row d.revenue + d.orders
 // (was income + tx_count); summary.{total_revenue, total_orders,
-// pending_revenue, pending_orders}.
-//
-// Offset support (G2): /admin/income takes only `days`, no offset. To
-// power the Yesterday button, we request `days + offset` rows and slice
-// off the trailing `offset` entries (today's row when offset=1). The
-// legend totals are recomputed locally from the trimmed array; the
-// pending/income summary cards stay global by design.
+// pending_revenue, pending_orders}. Offset is applied server-side
+// (Phase G5a backend); summary + by_product stay lifetime aggregates.
 async function loadAdminIncomeChart() {
   if (typeof Chart === 'undefined') return;
   const gridColor = 'rgba(255,255,255,0.06)';
   const tickColor = '#888';
   try {
     const offset = Number(_adminRange.offset || 0);
-    const fetchDays = _adminRange.days + offset;
-    const data = await api('GET', '/admin/income?days=' + fetchDays);
-    const allDays = data.daily || [];
-    let days = allDays;
-    if (offset > 0) {
-      // Filter by date range when offset > 0 — slicing by index breaks
-      // when the server skips empty days.
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const to = new Date(today); to.setDate(to.getDate() - offset);
-      const from = new Date(to);  from.setDate(from.getDate() - (_adminRange.days - 1));
-      const fromMs = from.getTime();
-      const toMs   = to.getTime() + 86400000 - 1;
-      days = allDays.filter(d => {
-        const ts = new Date(d.date).getTime();
-        return ts >= fromMs && ts <= toMs;
-      });
-    }
+    const data = await api(
+      'GET',
+      '/admin/income?days=' + _adminRange.days + '&offset=' + offset
+    );
+    const days = data.daily || [];
     const labels = days.map(d => {
       const dt = new Date(d.date);
       return String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0');
